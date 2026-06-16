@@ -168,7 +168,15 @@ app.post('/cikis', (req, res) => {
 });
 
 // ---------- Ana Sayfa (Panel) ----------
-app.get('/', requireAuth, (req, res) => {
+app.get('/', (req, res) => {
+  // Giris yapmamis ziyaretciler -> herkese acik tanitim sayfasi
+  if (!req.session.userId) {
+    return res.render('landing', {
+      title: 'Bilisim Evrak Arsivi',
+      categories: db.categories.all()
+    });
+  }
+  // Giris yapmis kullanicilar -> panel
   const categories = db.categories.all().map((c) => ({
     ...c,
     count: db.documents.countByCategory(c.id)

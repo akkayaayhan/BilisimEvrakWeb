@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <meta name="description" content="Bilisim Teknolojileri ogretmenleri icin yillik plan, zumre, yazili ve tum okul evraklarinin guvenli arsivi." />
+  <link rel="stylesheet" href="/public/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📂</text></svg>" />
+</head>
+<body class="landing-body">
+
+  <header class="landing-header">
+    <div class="landing-header-inner">
+      <a href="/" class="landing-brand">📂 <span>Öğretmen Evrak</span></a>
+      <a href="/giris" class="btn btn-primary">🔐 Giriş Yap</a>
+    </div>
+  </header>
+
+  <section class="landing-hero">
+    <div class="landing-hero-inner">
+      <div class="hero-badge">Bilişim Teknolojileri Alanı</div>
+      <h1>Tüm Evraklarınız<br />Tek Güvenli Yerde</h1>
+      <p class="hero-lead">
+        Yıllık planlar, zümreler, yazılılar, şeflik evrakları, zanaat atölyeleri ve daha fazlası —
+        düzenli, aranabilir ve her an erişilebilir.
+      </p>
+      <div class="hero-cta">
+        <a href="/giris" class="btn btn-primary btn-lg">Giriş Yap →</a>
+      </div>
+      <p class="hero-note">🔒 Evrakları görüntülemek ve indirmek için giriş yapmanız gerekir.</p>
+    </div>
+  </section>
+
+  <section class="landing-section">
+    <div class="landing-container">
+      <h2 class="landing-h2">Arşivde Neler Var?</h2>
+      <p class="landing-sub">Tüm dökümanlarınız kategorilere ayrılmış, düzenli ve kolayca bulunabilir.</p>
+      <div class="landing-grid">
+        <% categories.forEach(function(cat) { %>
+          <div class="landing-card">
+            <div class="landing-card-icon"><%= cat.icon %></div>
+            <h3><%= cat.name %></h3>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section landing-section-alt">
+    <div class="landing-container">
+      <h2 class="landing-h2">Neler Sunuyor?</h2>
+      <div class="landing-feat-grid">
+        <div class="landing-feat">
+          <div class="lf-icon">🔍</div>
+          <h3>Hızlı Arama</h3>
+          <p>Başlık ya da dosya adına göre saniyeler içinde istediğiniz evrağa ulaşın.</p>
+        </div>
+        <div class="landing-feat">
+          <div class="lf-icon">📅</div>
+          <h3>Döneme Göre</h3>
+          <p>Evrakları öğretim yılına ve alt kategoriye göre filtreleyin.</p>
+        </div>
+        <div class="landing-feat">
+          <div class="lf-icon">👁️</div>
+          <h3>Tarayıcıda Önizleme</h3>
+          <p>Word ve PDF belgelerini indirmeden, doğrudan tarayıcıda görüntüleyin.</p>
+        </div>
+        <div class="landing-feat">
+          <div class="lf-icon">🔐</div>
+          <h3>Güvenli Erişim</h3>
+          <p>Yalnızca yetkili kişiler giriş yapıp evraklara erişebilir.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-final">
+    <div class="landing-container">
+      <h2>Hemen Başlayın</h2>
+      <p>Hesabınızla giriş yapın, evraklarınıza her yerden ulaşın.</p>
+      <a href="/giris" class="btn btn-lg landing-final-btn">Giriş Yap →</a>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>Bilişim Teknolojileri Evrak Yönetim Sistemi · <%= new Date().getFullYear() %></p>
+  </footer>
+
+</body>
+</html>
