@@ -13,7 +13,12 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+// Veri klasoru. Hostinger gibi her deploy'da calisma klasorunu temizleyen
+// ortamlarda, DATA_DIR ortam degiskeni ile uygulama klasorunun DISINDA
+// (orn. /home/kullanici/evrak-data) bir yer gosterilirse veriler ASLA silinmez.
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 // Varsayilan kategoriler (ilk acilista olusturulur, sonra panelden yonetilir)

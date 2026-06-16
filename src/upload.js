@@ -5,7 +5,11 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 
-const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
+// Yuklenen dosyalarin klasoru. Deploy'da silinmemesi icin UPLOADS_DIR
+// ortam degiskeni ile uygulama klasorunun DISINDA bir yer gosterilebilir.
+const UPLOAD_DIR = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : path.join(__dirname, '..', 'uploads');
 
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
