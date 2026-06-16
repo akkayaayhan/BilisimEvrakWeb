@@ -29,7 +29,7 @@
         <div class="doc-actions">
           <a href="/onizle/<%= doc.id %>" class="btn btn-sm" title="Onizle">👁️</a>
           <a href="/indir/<%= doc.id %>" class="btn btn-sm">⬇️ Indir</a>
-          <% if (currentUser.role === 'admin' || currentUser.id === doc.uploadedBy) { %>
+          <% if (currentUser.role === 'admin') { %>
             <a href="/evrak/<%= doc.id %>/duzenle" class="btn btn-sm" title="Duzenle">✏️</a>
           <% } %>
         </div>

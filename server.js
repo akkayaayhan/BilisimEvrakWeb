@@ -225,7 +225,7 @@ app.get('/ara', requireAuth, (req, res) => {
 });
 
 // ---------- Evrak yukleme ----------
-app.get('/yukle', requireAuth, (req, res) => {
+app.get('/yukle', requireAuth, requireAdmin, (req, res) => {
   const preselect = req.query.kategori || '';
   res.render('upload', {
     title: 'Evrak Yukle',
@@ -236,7 +236,7 @@ app.get('/yukle', requireAuth, (req, res) => {
   });
 });
 
-app.post('/yukle', requireAuth, (req, res) => {
+app.post('/yukle', requireAuth, requireAdmin, (req, res) => {
   upload.single('file')(req, res, (err) => {
     if (err) {
       setFlash(req, 'error', 'Yukleme hatasi: ' + err.message);
@@ -328,14 +328,10 @@ app.get('/onizle/:id', requireAuth, (req, res) => {
 });
 
 // ---------- Evrak bilgisi duzenleme (yukleyen kisi veya admin) ----------
-app.get('/evrak/:id/duzenle', requireAuth, (req, res) => {
+app.get('/evrak/:id/duzenle', requireAuth, requireAdmin, (req, res) => {
   const doc = db.documents.findById(req.params.id);
   if (!doc) {
     return res.status(404).render('error', { title: 'Bulunamadi', message: 'Evrak bulunamadi.' });
-  }
-  const isOwner = doc.uploadedBy === req.session.user.id;
-  if (!isOwner && req.session.user.role !== 'admin') {
-    return res.status(403).render('error', { title: 'Yetkisiz', message: 'Bu evraki duzenleme yetkiniz yok.' });
   }
   res.render('edit', {
     title: 'Evrak Duzenle',
@@ -346,15 +342,11 @@ app.get('/evrak/:id/duzenle', requireAuth, (req, res) => {
   });
 });
 
-app.post('/evrak/:id/duzenle', requireAuth, (req, res) => {
+app.post('/evrak/:id/duzenle', requireAuth, requireAdmin, (req, res) => {
   const doc = db.documents.findById(req.params.id);
   if (!doc) {
     setFlash(req, 'error', 'Evrak bulunamadi.');
     return res.redirect('/');
-  }
-  const isOwner = doc.uploadedBy === req.session.user.id;
-  if (!isOwner && req.session.user.role !== 'admin') {
-    return res.status(403).render('error', { title: 'Yetkisiz', message: 'Bu evraki duzenleme yetkiniz yok.' });
   }
   const { title, description, categoryId, subcategoryId, newSubcategory, termId, newTerm } = req.body;
   const category = db.categories.findById(categoryId);
@@ -384,17 +376,11 @@ app.post('/evrak/:id/duzenle', requireAuth, (req, res) => {
 });
 
 // ---------- Evrak silme (yukleyen kisi veya admin) ----------
-app.post('/evrak/:id/sil', requireAuth, (req, res) => {
+app.post('/evrak/:id/sil', requireAuth, requireAdmin, (req, res) => {
   const doc = db.documents.findById(req.params.id);
   if (!doc) {
     setFlash(req, 'error', 'Evrak bulunamadi.');
     return res.redirect('/');
-  }
-  const isOwner = doc.uploadedBy === req.session.user.id;
-  const isAdmin = req.session.user.role === 'admin';
-  if (!isOwner && !isAdmin) {
-    setFlash(req, 'error', 'Bu evraki silme yetkiniz yok.');
-    return res.redirect('back');
   }
   db.documents.remove(doc.id);
   fs.unlink(path.join(UPLOAD_DIR, doc.storedName), () => {});

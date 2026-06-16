@@ -19,7 +19,9 @@
       </form>
 
       <nav class="topnav">
-        <a href="/yukle" class="btn btn-primary btn-sm">⬆️ Evrak Yukle</a>
+        <% if (currentUser.role === 'admin') { %>
+          <a href="/yukle" class="btn btn-primary btn-sm">⬆️ Evrak Yukle</a>
+        <% } %>
         <% if (currentUser.role === 'admin') { %>
           <div class="dropdown">
             <button class="btn btn-ghost btn-sm">⚙️ Yonetim ▾</button>

@@ -5,7 +5,9 @@
     <h1>Ana Sayfa</h1>
     <p class="muted">Toplam <strong><%= totalDocs %></strong> evrak · <strong><%= categories.length %></strong> kategori</p>
   </div>
-  <a href="/yukle" class="btn btn-primary">⬆️ Yeni Evrak Yukle</a>
+  <% if (currentUser.role === 'admin') { %>
+    <a href="/yukle" class="btn btn-primary">⬆️ Yeni Evrak Yukle</a>
+  <% } %>
 </div>
 
 <h2 class="section-title">Kategoriler</h2>
@@ -28,7 +30,9 @@
 <% if (recent.length === 0) { %>
   <div class="empty-state">
     <p>Henuz hic evrak yuklenmemis.</p>
-    <a href="/yukle" class="btn btn-primary">Ilk evraki yukle</a>
+    <% if (currentUser.role === 'admin') { %>
+      <a href="/yukle" class="btn btn-primary">Ilk evraki yukle</a>
+    <% } %>
   </div>
 <% } else { %>
   <div class="doc-list">
