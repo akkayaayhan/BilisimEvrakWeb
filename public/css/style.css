@@ -91,20 +91,43 @@ a:hover { text-decoration: underline; }
 /* ---------- Dropdown ---------- */
 .dropdown { position: relative; }
 .dropdown-menu {
-  display: none;
   position: absolute;
-  top: calc(100% + 6px);
+  top: 100%;
   left: 0;
+  margin-top: 8px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: var(--shadow-lg);
-  min-width: 180px;
+  min-width: 190px;
   overflow: hidden;
   z-index: 200;
+  /* Gorunurlugu opacity/visibility ile yonet -> kapanma gecikmesi (tolerans) eklenebilir */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
+  transition-delay: 0.25s; /* fare menuye giderken kapanmasi icin tolerans */
+  pointer-events: none;
+}
+/* Buton ile menu arasindaki boslugu gorunmez bir kopru ile doldur (olu bolge olmasin) */
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
 }
 .dropdown-menu.dropdown-right { left: auto; right: 0; }
-.dropdown:hover .dropdown-menu { display: block; }
+.dropdown:hover .dropdown-menu,
+.dropdown:focus-within .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition-delay: 0s; /* acilirken gecikme olmasin */
+}
 .dropdown-menu a,
 .dropdown-menu button {
   display: block;
