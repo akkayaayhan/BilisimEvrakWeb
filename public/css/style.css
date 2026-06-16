@@ -237,6 +237,87 @@ a:hover { text-decoration: underline; }
 }
 .tag:hover { text-decoration: none; background: #dbeafe; }
 
+.tag-sub { background: #fef3c7; color: #92400e; }
+.tag-sub:hover { text-decoration: none; }
+
+/* ---------- Filter bar (alt kategori filtresi) ---------- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.filter-chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.filter-chip:hover { background: var(--bg); }
+.filter-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ---------- Admin: kategori + alt kategori yonetimi ---------- */
+.admin-cat-list { display: flex; flex-direction: column; gap: 14px; }
+.admin-cat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.admin-cat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.admin-cat-title { font-weight: 600; font-size: 1.05rem; margin-right: 8px; }
+.admin-sub-area { padding: 14px 16px; background: var(--bg); }
+.sub-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.sub-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  padding: 4px 6px 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+.sub-count {
+  background: rgba(146, 64, 14, 0.15);
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: 0.72rem;
+}
+.sub-chip .sub-del { display: inline; }
+.sub-chip .sub-del button {
+  border: none;
+  background: rgba(146, 64, 14, 0.12);
+  color: #92400e;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+.sub-chip .sub-del button:hover { background: var(--danger); color: #fff; }
+.sub-add { margin-top: 4px; }
+
 /* ---------- Empty / error ---------- */
 .empty-state {
   text-align: center;

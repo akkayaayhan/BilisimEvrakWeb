@@ -1,14 +1,33 @@
 <%- include('partials/header') %>
 
+<%
+  // Alt kategori id -> isim haritasi (etiketlerde kullanmak icin)
+  var subMap = {};
+  subcategories.forEach(function (s) { subMap[s.id] = s.name; });
+%>
+
 <div class="breadcrumb"><a href="/">Ana Sayfa</a> / <%= category.name %></div>
 
 <div class="page-head">
   <div>
     <h1><%= category.icon %> <%= category.name %></h1>
-    <p class="muted"><%= documents.length %> evrak</p>
+    <p class="muted"><%= documents.length %> evrak<% if (subcategories.length) { %> · <%= subcategories.length %> alt kategori<% } %></p>
   </div>
   <a href="/yukle?kategori=<%= category.id %>" class="btn btn-primary">⬆️ Bu Kategoriye Yukle</a>
 </div>
+
+<% if (subcategories.length > 0) { %>
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-chip active" data-filter="all">Tumu (<%= documents.length %>)</button>
+    <% subcategories.forEach(function(sub) { %>
+      <button class="filter-chip" data-filter="<%= sub.id %>"><%= sub.name %> (<%= sub.count %>)</button>
+    <% }); %>
+    <% var noSubCount = documents.filter(function(d){ return !d.subcategoryId; }).length; %>
+    <% if (noSubCount > 0) { %>
+      <button class="filter-chip" data-filter="none">Diger (<%= noSubCount %>)</button>
+    <% } %>
+  </div>
+<% } %>
 
 <% if (documents.length === 0) { %>
   <div class="empty-state">
@@ -16,14 +35,17 @@
     <a href="/yukle?kategori=<%= category.id %>" class="btn btn-primary">Evrak yukle</a>
   </div>
 <% } else { %>
-  <div class="doc-list">
+  <div class="doc-list" id="docList">
     <% documents.forEach(function(doc) { %>
-      <div class="doc-row">
+      <div class="doc-row" data-sub="<%= doc.subcategoryId || 'none' %>">
         <div class="doc-icon"><%= helpers.fileIcon(doc.originalName) %></div>
         <div class="doc-main">
           <div class="doc-title"><%= doc.title %></div>
           <% if (doc.description) { %><div class="doc-desc"><%= doc.description %></div><% } %>
           <div class="doc-meta">
+            <% if (doc.subcategoryId && subMap[doc.subcategoryId]) { %>
+              <span class="tag tag-sub">📁 <%= subMap[doc.subcategoryId] %></span>
+            <% } %>
             <span title="Dosya adi"><%= doc.originalName %></span>
             <span><%= helpers.formatBytes(doc.size) %></span>
             <span><%= helpers.formatDate(doc.createdAt) %></span>
@@ -42,6 +64,30 @@
       </div>
     <% }); %>
   </div>
+  <p class="muted" id="noResult" style="display:none; text-align:center; padding:20px;">Bu alt kategoride evrak yok.</p>
 <% } %>
+
+<script>
+  (function () {
+    var bar = document.getElementById('filterBar');
+    if (!bar) return;
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#docList .doc-row'));
+    var noResult = document.getElementById('noResult');
+    bar.addEventListener('click', function (e) {
+      var chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      bar.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      var filter = chip.getAttribute('data-filter');
+      var visible = 0;
+      rows.forEach(function (row) {
+        var show = filter === 'all' || row.getAttribute('data-sub') === filter;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      if (noResult) noResult.style.display = visible === 0 ? 'block' : 'none';
+    });
+  })();
+</script>
 
 <%- include('partials/footer') %>

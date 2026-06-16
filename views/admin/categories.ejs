@@ -15,26 +15,44 @@
   </form>
 </div>
 
-<div class="table-wrap">
-  <table class="table">
-    <thead>
-      <tr><th>Simge</th><th>Ad</th><th>Evrak Sayisi</th><th></th></tr>
-    </thead>
-    <tbody>
-      <% categories.forEach(function(cat) { %>
-        <tr>
-          <td class="cell-icon"><%= cat.icon %></td>
-          <td><%= cat.name %></td>
-          <td><span class="badge"><%= cat.count %></span></td>
-          <td class="cell-actions">
-            <form action="/yonetim/kategoriler/<%= cat.id %>/sil" method="post" class="js-confirm" data-confirm="'<%= cat.name %>' kategorisini silmek istiyor musunuz?">
-              <button type="submit" class="btn btn-sm btn-danger" <%= cat.count > 0 ? 'disabled title="Once evraklari silin"' : '' %>>Sil</button>
-            </form>
-          </td>
-        </tr>
-      <% }); %>
-    </tbody>
-  </table>
+<h2 class="section-title">Kategoriler ve Alt Kategoriler</h2>
+
+<div class="admin-cat-list">
+  <% categories.forEach(function(cat) { %>
+    <div class="admin-cat">
+      <div class="admin-cat-head">
+        <div>
+          <span class="admin-cat-title"><%= cat.icon %> <%= cat.name %></span>
+          <span class="badge"><%= cat.count %> evrak</span>
+        </div>
+        <form action="/yonetim/kategoriler/<%= cat.id %>/sil" method="post" class="js-confirm" data-confirm="'<%= cat.name %>' kategorisini (ve tum alt kategorilerini) silmek istiyor musunuz?">
+          <button type="submit" class="btn btn-sm btn-danger" <%= cat.count > 0 ? 'disabled title="Once evraklari silin"' : '' %>>Kategoriyi Sil</button>
+        </form>
+      </div>
+
+      <div class="admin-sub-area">
+        <% if (cat.subcategories.length > 0) { %>
+          <div class="sub-chips">
+            <% cat.subcategories.forEach(function(sub) { %>
+              <span class="sub-chip">
+                📁 <%= sub.name %> <span class="sub-count"><%= sub.count %></span>
+                <form action="/yonetim/alt-kategori/<%= sub.id %>/sil" method="post" class="js-confirm sub-del" data-confirm="'<%= sub.name %>' alt kategorisini silmek istiyor musunuz? (Evraklar silinmez, sadece alt kategorisi kaldirilir.)">
+                  <button type="submit" title="Alt kategoriyi sil">✕</button>
+                </form>
+              </span>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="muted" style="margin:6px 0">Henuz alt kategori yok.</p>
+        <% } %>
+
+        <form action="/yonetim/kategoriler/<%= cat.id %>/alt-ekle" method="post" class="form-inline sub-add">
+          <input type="text" name="name" placeholder="Yeni alt kategori (orn. Mobil Uygulamalar)" required style="flex:1" />
+          <button type="submit" class="btn btn-sm">+ Alt Kategori Ekle</button>
+        </form>
+      </div>
+    </div>
+  <% }); %>
 </div>
 
 <%- include('../partials/footer') %>

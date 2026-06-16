@@ -30,6 +30,7 @@ const DEFAULT_CATEGORIES = [
 let db = {
   users: [],
   categories: [],
+  subcategories: [],
   documents: []
 };
 
@@ -62,6 +63,7 @@ function load() {
       db = JSON.parse(raw);
       db.users = db.users || [];
       db.categories = db.categories || [];
+      db.subcategories = db.subcategories || [];
       db.documents = db.documents || [];
     } catch (err) {
       console.error('[db] db.json okunamadi, bos veritabani ile baslaniyor:', err.message);
@@ -169,7 +171,44 @@ const categories = {
   remove: (id) => {
     const before = db.categories.length;
     db.categories = db.categories.filter((c) => c.id !== id);
+    // Kategoriye ait alt kategorileri de sil
+    db.subcategories = db.subcategories.filter((s) => s.categoryId !== id);
     if (db.categories.length !== before) save();
+  }
+};
+
+// ---------------------- Alt Kategoriler ----------------------
+const subcategories = {
+  all: () => db.subcategories.slice(),
+  byCategory: (categoryId) =>
+    db.subcategories
+      .filter((s) => s.categoryId === categoryId)
+      .sort((a, b) => a.name.localeCompare(b.name, 'tr')),
+  findById: (id) => db.subcategories.find((s) => s.id === id),
+  findByNameInCategory: (categoryId, name) =>
+    db.subcategories.find(
+      (s) => s.categoryId === categoryId && s.name.toLowerCase() === String(name).toLowerCase().trim()
+    ),
+  create: ({ categoryId, name }) => {
+    const sub = {
+      id: newId(),
+      categoryId,
+      name: name.trim(),
+      slug: slugify(name),
+      createdAt: new Date().toISOString()
+    };
+    db.subcategories.push(sub);
+    save();
+    return sub;
+  },
+  remove: (id) => {
+    const before = db.subcategories.length;
+    db.subcategories = db.subcategories.filter((s) => s.id !== id);
+    // Bu alt kategorideki evraklarin alt kategorisini bosalt (evraklar silinmez)
+    db.documents.forEach((d) => {
+      if (d.subcategoryId === id) d.subcategoryId = null;
+    });
+    if (db.subcategories.length !== before) save();
   }
 };
 
@@ -182,6 +221,8 @@ const documents = {
       .filter((d) => d.categoryId === categoryId)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
   countByCategory: (categoryId) => db.documents.filter((d) => d.categoryId === categoryId).length,
+  countBySubcategory: (subcategoryId) =>
+    db.documents.filter((d) => d.subcategoryId === subcategoryId).length,
   search: (query) => {
     const q = String(query).toLowerCase().trim();
     if (!q) return [];
@@ -200,6 +241,7 @@ const documents = {
       title: doc.title,
       description: doc.description || '',
       categoryId: doc.categoryId,
+      subcategoryId: doc.subcategoryId || null,
       storedName: doc.storedName,
       originalName: doc.originalName,
       size: doc.size,
@@ -228,5 +270,6 @@ module.exports = {
   slugify,
   users,
   categories,
+  subcategories,
   documents
 };

@@ -175,7 +175,11 @@ app.get('/kategori/:slug', requireAuth, (req, res) => {
     });
   }
   const documents = db.documents.byCategory(category.id);
-  res.render('category', { title: category.name, category, documents });
+  const subs = db.subcategories.byCategory(category.id).map((s) => ({
+    ...s,
+    count: db.documents.countBySubcategory(s.id)
+  }));
+  res.render('category', { title: category.name, category, documents, subcategories: subs });
 });
 
 // ---------- Arama ----------
@@ -193,6 +197,7 @@ app.get('/yukle', requireAuth, (req, res) => {
   res.render('upload', {
     title: 'Evrak Yukle',
     categories: db.categories.all(),
+    subcategories: db.subcategories.all(),
     preselect
   });
 });
@@ -207,7 +212,7 @@ app.post('/yukle', requireAuth, (req, res) => {
       setFlash(req, 'error', 'Lutfen bir dosya secin.');
       return res.redirect('/yukle');
     }
-    const { title, description, categoryId } = req.body;
+    const { title, description, categoryId, subcategoryId, newSubcategory } = req.body;
     const category = db.categories.findById(categoryId);
     if (!category) {
       // Gecersiz kategori -> yuklenen dosyayi sil
@@ -215,10 +220,21 @@ app.post('/yukle', requireAuth, (req, res) => {
       setFlash(req, 'error', 'Gecerli bir kategori secin.');
       return res.redirect('/yukle');
     }
+    // Alt kategoriyi coz: yeni isim girildiyse olustur, yoksa secileni kullan
+    let subId = null;
+    if (newSubcategory && newSubcategory.trim()) {
+      let sub = db.subcategories.findByNameInCategory(category.id, newSubcategory);
+      if (!sub) sub = db.subcategories.create({ categoryId: category.id, name: newSubcategory });
+      subId = sub.id;
+    } else if (subcategoryId) {
+      const sub = db.subcategories.findById(subcategoryId);
+      if (sub && sub.categoryId === category.id) subId = sub.id;
+    }
     db.documents.create({
       title: (title || req.file.originalname).trim(),
       description: description || '',
       categoryId: category.id,
+      subcategoryId: subId,
       storedName: req.file.filename,
       originalName: req.file.originalname,
       size: req.file.size,
@@ -315,7 +331,11 @@ app.post('/hesabim/sifre', requireAuth, (req, res) => {
 app.get('/yonetim/kategoriler', requireAuth, requireAdmin, (req, res) => {
   const categories = db.categories.all().map((c) => ({
     ...c,
-    count: db.documents.countByCategory(c.id)
+    count: db.documents.countByCategory(c.id),
+    subcategories: db.subcategories.byCategory(c.id).map((s) => ({
+      ...s,
+      count: db.documents.countBySubcategory(s.id)
+    }))
   }));
   res.render('admin/categories', { title: 'Kategori Yonetimi', categories });
 });
@@ -349,6 +369,38 @@ app.post('/yonetim/kategoriler/:id/sil', requireAuth, requireAdmin, (req, res) =
   }
   db.categories.remove(category.id);
   setFlash(req, 'success', 'Kategori silindi.');
+  res.redirect('/yonetim/kategoriler');
+});
+
+// ---------- Alt kategori yonetimi ----------
+app.post('/yonetim/kategoriler/:id/alt-ekle', requireAuth, requireAdmin, (req, res) => {
+  const category = db.categories.findById(req.params.id);
+  const { name } = req.body;
+  if (!category) {
+    setFlash(req, 'error', 'Kategori bulunamadi.');
+    return res.redirect('/yonetim/kategoriler');
+  }
+  if (!name || !name.trim()) {
+    setFlash(req, 'error', 'Alt kategori adi bos olamaz.');
+    return res.redirect('/yonetim/kategoriler');
+  }
+  if (db.subcategories.findByNameInCategory(category.id, name)) {
+    setFlash(req, 'error', 'Bu kategoride ayni isimde alt kategori zaten var.');
+    return res.redirect('/yonetim/kategoriler');
+  }
+  db.subcategories.create({ categoryId: category.id, name });
+  setFlash(req, 'success', 'Alt kategori eklendi.');
+  res.redirect('/yonetim/kategoriler');
+});
+
+app.post('/yonetim/alt-kategori/:id/sil', requireAuth, requireAdmin, (req, res) => {
+  const sub = db.subcategories.findById(req.params.id);
+  if (!sub) {
+    setFlash(req, 'error', 'Alt kategori bulunamadi.');
+    return res.redirect('/yonetim/kategoriler');
+  }
+  db.subcategories.remove(sub.id);
+  setFlash(req, 'success', 'Alt kategori silindi. (Evraklar silinmedi, sadece alt kategorisi kaldirildi.)');
   res.redirect('/yonetim/kategoriler');
 });
 
