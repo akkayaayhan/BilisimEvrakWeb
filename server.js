@@ -128,7 +128,19 @@ app.post('/giris', (req, res) => {
   };
   const dest = req.session.returnTo || '/';
   delete req.session.returnTo;
-  res.redirect(dest);
+  // Oturumu diske YAZDIKTAN sonra yonlendir (yarisma durumunu onler).
+  // Aksi halde tarayici, oturum dosyasi yazilmadan / sayfasini ister
+  // ve tekrar giris ekranina atilir.
+  req.session.save((err) => {
+    if (err) {
+      console.error('[oturum] kaydedilemedi:', err);
+      return res.status(500).render('login', {
+        title: 'Giris Yap',
+        error: 'Oturum baslatilamadi, lutfen tekrar deneyin.'
+      });
+    }
+    res.redirect(dest);
+  });
 });
 
 app.post('/cikis', (req, res) => {
