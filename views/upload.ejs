@@ -35,6 +35,22 @@
     </label>
 
     <label>
+      Ogretim Donemi <small class="muted">(istege bagli)</small>
+      <select name="termId" id="termSelect">
+        <option value="">— Donem yok —</option>
+        <% terms.forEach(function(t) { %>
+          <option value="<%= t.id %>"><%= t.name %></option>
+        <% }); %>
+        <option value="__new__">➕ Yeni donem ekle...</option>
+      </select>
+    </label>
+
+    <label id="newTermWrap" style="display:none">
+      Yeni Donem
+      <input type="text" name="newTerm" id="newTermInput" placeholder="Orn: 2025-2026" />
+    </label>
+
+    <label>
       Aciklama (istege bagli)
       <textarea name="description" rows="3" placeholder="Kisa not..."></textarea>
     </label>
@@ -85,9 +101,24 @@
   categorySelect.addEventListener('change', rebuildSubs);
   subSelect.addEventListener('change', toggleNewInput);
 
-  // Gonderirken "__new__" secimini temizle (newSubcategory metni kullanilsin)
+  // Donem: "yeni ekle" secilince metin kutusunu goster
+  var termSelect = document.getElementById('termSelect');
+  var newTermWrap = document.getElementById('newTermWrap');
+  var newTermInput = document.getElementById('newTermInput');
+  function toggleNewTerm() {
+    if (termSelect.value === '__new__') {
+      newTermWrap.style.display = '';
+    } else {
+      newTermWrap.style.display = 'none';
+      newTermInput.value = '';
+    }
+  }
+  termSelect.addEventListener('change', toggleNewTerm);
+
+  // Gonderirken "__new__" secimlerini temizle (metin kutulari kullanilsin)
   document.getElementById('uploadForm').addEventListener('submit', function () {
     if (subSelect.value === '__new__') subSelect.value = '';
+    if (termSelect.value === '__new__') termSelect.value = '';
   });
 
   // Sayfa acilirken (kategori onceden secili gelebilir) alt kategorileri doldur

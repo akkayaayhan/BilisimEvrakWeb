@@ -110,6 +110,17 @@ function setFlash(req, type, message) {
   req.session.flash = { type, message };
 }
 
+// Donemi coz: yeni ad girildiyse olustur (ya da ayni adliyi bul), yoksa secileni kullan
+function resolveTerm(termId, newTerm) {
+  if (newTerm && newTerm.trim()) {
+    let term = db.terms.findByName(newTerm);
+    if (!term) term = db.terms.create({ name: newTerm });
+    return term.id;
+  }
+  if (termId && db.terms.findById(termId)) return termId;
+  return null;
+}
+
 // ==================== ROTALAR ====================
 
 // ---------- Giris / Cikis ----------
@@ -187,7 +198,20 @@ app.get('/kategori/:slug', requireAuth, (req, res) => {
     ...s,
     count: db.documents.countBySubcategory(s.id)
   }));
-  res.render('category', { title: category.name, category, documents, subcategories: subs });
+  // Bu kategorideki evraklarda kullanilan donemler (sayilariyla)
+  const termList = db.terms.all()
+    .map((t) => ({
+      ...t,
+      count: documents.filter((d) => d.termId === t.id).length
+    }))
+    .filter((t) => t.count > 0);
+  res.render('category', {
+    title: category.name,
+    category,
+    documents,
+    subcategories: subs,
+    terms: termList
+  });
 });
 
 // ---------- Arama ----------
@@ -206,6 +230,7 @@ app.get('/yukle', requireAuth, (req, res) => {
     title: 'Evrak Yukle',
     categories: db.categories.all(),
     subcategories: db.subcategories.all(),
+    terms: db.terms.all(),
     preselect
   });
 });
@@ -220,7 +245,7 @@ app.post('/yukle', requireAuth, (req, res) => {
       setFlash(req, 'error', 'Lutfen bir dosya secin.');
       return res.redirect('/yukle');
     }
-    const { title, description, categoryId, subcategoryId, newSubcategory } = req.body;
+    const { title, description, categoryId, subcategoryId, newSubcategory, termId, newTerm } = req.body;
     const category = db.categories.findById(categoryId);
     if (!category) {
       // Gecersiz kategori -> yuklenen dosyayi sil
@@ -238,11 +263,14 @@ app.post('/yukle', requireAuth, (req, res) => {
       const sub = db.subcategories.findById(subcategoryId);
       if (sub && sub.categoryId === category.id) subId = sub.id;
     }
+    // Donemi coz
+    const tId = resolveTerm(termId, newTerm);
     db.documents.create({
       title: (title || req.file.originalname).trim(),
       description: description || '',
       categoryId: category.id,
       subcategoryId: subId,
+      termId: tId,
       storedName: req.file.filename,
       originalName: req.file.originalname,
       size: req.file.size,
@@ -312,7 +340,8 @@ app.get('/evrak/:id/duzenle', requireAuth, (req, res) => {
     title: 'Evrak Duzenle',
     doc,
     categories: db.categories.all(),
-    subcategories: db.subcategories.all()
+    subcategories: db.subcategories.all(),
+    terms: db.terms.all()
   });
 });
 
@@ -326,7 +355,7 @@ app.post('/evrak/:id/duzenle', requireAuth, (req, res) => {
   if (!isOwner && req.session.user.role !== 'admin') {
     return res.status(403).render('error', { title: 'Yetkisiz', message: 'Bu evraki duzenleme yetkiniz yok.' });
   }
-  const { title, description, categoryId, subcategoryId, newSubcategory } = req.body;
+  const { title, description, categoryId, subcategoryId, newSubcategory, termId, newTerm } = req.body;
   const category = db.categories.findById(categoryId);
   if (!category) {
     setFlash(req, 'error', 'Gecerli bir kategori secin.');
@@ -346,7 +375,8 @@ app.post('/evrak/:id/duzenle', requireAuth, (req, res) => {
     title: (title || doc.originalName).trim(),
     description: description || '',
     categoryId: category.id,
-    subcategoryId: subId
+    subcategoryId: subId,
+    termId: resolveTerm(termId, newTerm)
   });
   setFlash(req, 'success', 'Evrak bilgileri guncellendi.');
   res.redirect('/kategori/' + category.slug);
@@ -474,6 +504,41 @@ app.post('/yonetim/alt-kategori/:id/sil', requireAuth, requireAdmin, (req, res) 
   db.subcategories.remove(sub.id);
   setFlash(req, 'success', 'Alt kategori silindi. (Evraklar silinmedi, sadece alt kategorisi kaldirildi.)');
   res.redirect('/yonetim/kategoriler');
+});
+
+// ---------- Ogretim donemi yonetimi ----------
+app.get('/yonetim/donemler', requireAuth, requireAdmin, (req, res) => {
+  const terms = db.terms.all().map((t) => ({
+    ...t,
+    count: db.documents.countByTerm(t.id)
+  }));
+  res.render('admin/terms', { title: 'Donem Yonetimi', terms });
+});
+
+app.post('/yonetim/donemler', requireAuth, requireAdmin, (req, res) => {
+  const { name } = req.body;
+  if (!name || !name.trim()) {
+    setFlash(req, 'error', 'Donem adi bos olamaz.');
+    return res.redirect('/yonetim/donemler');
+  }
+  if (db.terms.findByName(name)) {
+    setFlash(req, 'error', 'Bu donem zaten var.');
+    return res.redirect('/yonetim/donemler');
+  }
+  db.terms.create({ name });
+  setFlash(req, 'success', 'Donem eklendi.');
+  res.redirect('/yonetim/donemler');
+});
+
+app.post('/yonetim/donemler/:id/sil', requireAuth, requireAdmin, (req, res) => {
+  const term = db.terms.findById(req.params.id);
+  if (!term) {
+    setFlash(req, 'error', 'Donem bulunamadi.');
+    return res.redirect('/yonetim/donemler');
+  }
+  db.terms.remove(term.id);
+  setFlash(req, 'success', 'Donem silindi. (Evraklar silinmedi, sadece donem bilgisi kaldirildi.)');
+  res.redirect('/yonetim/donemler');
 });
 
 // ---------- Tani (teshis) sayfasi: veri klasorleri dogru mu? ----------

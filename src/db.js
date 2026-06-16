@@ -36,8 +36,12 @@ let db = {
   users: [],
   categories: [],
   subcategories: [],
+  terms: [],
   documents: []
 };
+
+// Varsayilan ogretim donemleri (ilk acilista olusturulur, sonra panelden yonetilir)
+const DEFAULT_TERMS = ['2025-2026', '2026-2027'];
 
 /** "Yillik Planlar" -> "yillik-planlar" */
 function slugify(text) {
@@ -71,6 +75,7 @@ function load() {
       db.users = db.users || [];
       db.categories = db.categories || [];
       db.subcategories = db.subcategories || [];
+      db.terms = db.terms || [];
       db.documents = db.documents || [];
     } catch (err) {
       console.error('[db] db.json okunamadi, bos veritabani ile baslaniyor:', err.message);
@@ -103,6 +108,16 @@ function seed(hashPassword) {
     }));
     changed = true;
     console.log('[db] Varsayilan kategoriler olusturuldu.');
+  }
+
+  if (db.terms.length === 0) {
+    db.terms = DEFAULT_TERMS.map((name) => ({
+      id: newId(),
+      name,
+      createdAt: new Date().toISOString()
+    }));
+    changed = true;
+    console.log('[db] Varsayilan ogretim donemleri olusturuldu.');
   }
 
   if (db.users.length === 0) {
@@ -219,6 +234,34 @@ const subcategories = {
   }
 };
 
+// ---------------------- Ogretim Donemleri ----------------------
+const terms = {
+  // En yeni donem ustte (2026-2027, 2025-2026, ...)
+  all: () => db.terms.slice().sort((a, b) => b.name.localeCompare(a.name, 'tr')),
+  findById: (id) => db.terms.find((t) => t.id === id),
+  findByName: (name) =>
+    db.terms.find((t) => t.name.toLowerCase() === String(name).toLowerCase().trim()),
+  create: ({ name }) => {
+    const term = {
+      id: newId(),
+      name: name.trim(),
+      createdAt: new Date().toISOString()
+    };
+    db.terms.push(term);
+    save();
+    return term;
+  },
+  remove: (id) => {
+    const before = db.terms.length;
+    db.terms = db.terms.filter((t) => t.id !== id);
+    // Bu doneme ait evraklarin donem bilgisini bosalt (evraklar silinmez)
+    db.documents.forEach((d) => {
+      if (d.termId === id) d.termId = null;
+    });
+    if (db.terms.length !== before) save();
+  }
+};
+
 // ---------------------- Evraklar (Dokumanlar) ----------------------
 const documents = {
   all: () => db.documents.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
@@ -230,6 +273,7 @@ const documents = {
   countByCategory: (categoryId) => db.documents.filter((d) => d.categoryId === categoryId).length,
   countBySubcategory: (subcategoryId) =>
     db.documents.filter((d) => d.subcategoryId === subcategoryId).length,
+  countByTerm: (termId) => db.documents.filter((d) => d.termId === termId).length,
   search: (query) => {
     const q = String(query).toLowerCase().trim();
     if (!q) return [];
@@ -249,6 +293,7 @@ const documents = {
       description: doc.description || '',
       categoryId: doc.categoryId,
       subcategoryId: doc.subcategoryId || null,
+      termId: doc.termId || null,
       storedName: doc.storedName,
       originalName: doc.originalName,
       size: doc.size,
@@ -287,5 +332,6 @@ module.exports = {
   users,
   categories,
   subcategories,
+  terms,
   documents
 };

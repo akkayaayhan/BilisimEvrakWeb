@@ -262,13 +262,29 @@ a:hover { text-decoration: underline; }
 
 .tag-sub { background: #fef3c7; color: #92400e; }
 .tag-sub:hover { text-decoration: none; }
+.tag-term { background: #e0e7ff; color: #3730a3; }
+.tag-term:hover { text-decoration: none; }
 
-/* ---------- Filter bar (alt kategori filtresi) ---------- */
+/* ---------- Filter bar (alt kategori / donem filtresi) ---------- */
+.filter-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.filter-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 84px;
+}
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 18px;
+  flex: 1;
 }
 .filter-chip {
   border: 1px solid var(--border);

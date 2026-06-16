@@ -1,9 +1,11 @@
 <%- include('partials/header') %>
 
 <%
-  // Alt kategori id -> isim haritasi (etiketlerde kullanmak icin)
+  // Alt kategori ve donem id -> isim haritalari (etiketlerde kullanmak icin)
   var subMap = {};
   subcategories.forEach(function (s) { subMap[s.id] = s.name; });
+  var termMap = {};
+  terms.forEach(function (t) { termMap[t.id] = t.name; });
 %>
 
 <div class="breadcrumb"><a href="/">Ana Sayfa</a> / <%= category.name %></div>
@@ -17,15 +19,34 @@
 </div>
 
 <% if (subcategories.length > 0) { %>
-  <div class="filter-bar" id="filterBar">
-    <button class="filter-chip active" data-filter="all">Tumu (<%= documents.length %>)</button>
-    <% subcategories.forEach(function(sub) { %>
-      <button class="filter-chip" data-filter="<%= sub.id %>"><%= sub.name %> (<%= sub.count %>)</button>
-    <% }); %>
-    <% var noSubCount = documents.filter(function(d){ return !d.subcategoryId; }).length; %>
-    <% if (noSubCount > 0) { %>
-      <button class="filter-chip" data-filter="none">Diger (<%= noSubCount %>)</button>
-    <% } %>
+  <div class="filter-group">
+    <span class="filter-label">Alt kategori:</span>
+    <div class="filter-bar" id="subFilterBar">
+      <button class="filter-chip active" data-filter="all">Tumu (<%= documents.length %>)</button>
+      <% subcategories.forEach(function(sub) { %>
+        <button class="filter-chip" data-filter="<%= sub.id %>"><%= sub.name %> (<%= sub.count %>)</button>
+      <% }); %>
+      <% var noSubCount = documents.filter(function(d){ return !d.subcategoryId; }).length; %>
+      <% if (noSubCount > 0) { %>
+        <button class="filter-chip" data-filter="none">Diger (<%= noSubCount %>)</button>
+      <% } %>
+    </div>
+  </div>
+<% } %>
+
+<% if (terms.length > 0) { %>
+  <div class="filter-group">
+    <span class="filter-label">📅 Donem:</span>
+    <div class="filter-bar" id="termFilterBar">
+      <button class="filter-chip active" data-filter="all">Tumu</button>
+      <% terms.forEach(function(t) { %>
+        <button class="filter-chip" data-filter="<%= t.id %>"><%= t.name %> (<%= t.count %>)</button>
+      <% }); %>
+      <% var noTermCount = documents.filter(function(d){ return !d.termId; }).length; %>
+      <% if (noTermCount > 0) { %>
+        <button class="filter-chip" data-filter="none">Donemsiz (<%= noTermCount %>)</button>
+      <% } %>
+    </div>
   </div>
 <% } %>
 
@@ -37,7 +58,7 @@
 <% } else { %>
   <div class="doc-list" id="docList">
     <% documents.forEach(function(doc) { %>
-      <div class="doc-row" data-sub="<%= doc.subcategoryId || 'none' %>">
+      <div class="doc-row" data-sub="<%= doc.subcategoryId || 'none' %>" data-term="<%= doc.termId || 'none' %>">
         <div class="doc-icon"><%= helpers.fileIcon(doc.originalName) %></div>
         <div class="doc-main">
           <div class="doc-title"><%= doc.title %></div>
@@ -45,6 +66,9 @@
           <div class="doc-meta">
             <% if (doc.subcategoryId && subMap[doc.subcategoryId]) { %>
               <span class="tag tag-sub">📁 <%= subMap[doc.subcategoryId] %></span>
+            <% } %>
+            <% if (doc.termId && termMap[doc.termId]) { %>
+              <span class="tag tag-term">📅 <%= termMap[doc.termId] %></span>
             <% } %>
             <span title="Dosya adi"><%= doc.originalName %></span>
             <span><%= helpers.formatBytes(doc.size) %></span>
@@ -65,29 +89,46 @@
       </div>
     <% }); %>
   </div>
-  <p class="muted" id="noResult" style="display:none; text-align:center; padding:20px;">Bu alt kategoride evrak yok.</p>
+  <p class="muted" id="noResult" style="display:none; text-align:center; padding:20px;">Bu filtreyle eslesen evrak yok.</p>
 <% } %>
 
 <script>
   (function () {
-    var bar = document.getElementById('filterBar');
-    if (!bar) return;
+    var subBar = document.getElementById('subFilterBar');
+    var termBar = document.getElementById('termFilterBar');
+    if (!subBar && !termBar) return;
+
     var rows = Array.prototype.slice.call(document.querySelectorAll('#docList .doc-row'));
     var noResult = document.getElementById('noResult');
-    bar.addEventListener('click', function (e) {
-      var chip = e.target.closest('.filter-chip');
-      if (!chip) return;
-      bar.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
-      chip.classList.add('active');
-      var filter = chip.getAttribute('data-filter');
+    var subFilter = 'all';
+    var termFilter = 'all';
+
+    function apply() {
       var visible = 0;
       rows.forEach(function (row) {
-        var show = filter === 'all' || row.getAttribute('data-sub') === filter;
+        var okSub = subFilter === 'all' || row.getAttribute('data-sub') === subFilter;
+        var okTerm = termFilter === 'all' || row.getAttribute('data-term') === termFilter;
+        var show = okSub && okTerm;
         row.style.display = show ? '' : 'none';
         if (show) visible++;
       });
       if (noResult) noResult.style.display = visible === 0 ? 'block' : 'none';
-    });
+    }
+
+    function wire(bar, setter) {
+      if (!bar) return;
+      bar.addEventListener('click', function (e) {
+        var chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        bar.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        setter(chip.getAttribute('data-filter'));
+        apply();
+      });
+    }
+
+    wire(subBar, function (v) { subFilter = v; });
+    wire(termBar, function (v) { termFilter = v; });
   })();
 </script>
 
