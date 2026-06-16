@@ -393,6 +393,21 @@ a:hover { text-decoration: underline; }
   display: block;
 }
 .preview-frame-text { background: #fff; }
+.docx-wrap {
+  max-height: 80vh;
+  overflow: auto;
+  background: #e9edf3;
+  padding: 16px 0;
+}
+.docx-container .docx-wrapper {
+  background: transparent;
+  padding: 0;
+}
+.docx-container .docx-wrapper > section.docx {
+  background: #fff;
+  box-shadow: var(--shadow-lg);
+  margin: 0 auto 16px;
+}
 .preview-image-wrap {
   display: flex;
   justify-content: center;

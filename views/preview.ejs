@@ -33,6 +33,40 @@
     <div class="preview-image-wrap">
       <img src="/goster/<%= doc.id %>" alt="<%= doc.title %>" />
     </div>
+  <% } else if (kind === 'word') { %>
+    <div class="docx-wrap">
+      <div id="docxContainer" class="docx-container">
+        <p class="muted" style="padding:24px;text-align:center">📄 Word belgesi yukleniyor...</p>
+      </div>
+    </div>
+    <script src="/public/vendor/jszip.min.js"></script>
+    <script src="/public/vendor/docx-preview.min.js"></script>
+    <script>
+      (function () {
+        var container = document.getElementById('docxContainer');
+        fetch('/goster/<%= doc.id %>', { credentials: 'same-origin' })
+          .then(function (r) {
+            if (!r.ok) throw new Error('Dosya alinamadi');
+            return r.blob();
+          })
+          .then(function (blob) {
+            container.innerHTML = '';
+            return docx.renderAsync(blob, container, null, {
+              className: 'docx',
+              inWrapper: true,
+              ignoreWidth: false,
+              breakPages: true
+            });
+          })
+          .catch(function (err) {
+            container.innerHTML =
+              '<div style="padding:30px;text-align:center">' +
+              '<p style="margin-bottom:14px">⚠️ Bu Word belgesi tarayicida onizlenemedi.</p>' +
+              '<p class="muted" style="margin-bottom:18px">Eski .doc formati veya karmasik bir belge olabilir. Indirip acabilirsiniz.</p>' +
+              '<a href="/indir/<%= doc.id %>" class="btn btn-primary">⬇️ Dosyayi Indir</a></div>';
+          });
+      })();
+    </script>
   <% } else if (kind === 'text') { %>
     <iframe src="/goster/<%= doc.id %>" class="preview-frame preview-frame-text" title="Metin onizleme"></iframe>
   <% } else { %>

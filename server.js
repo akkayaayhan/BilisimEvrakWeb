@@ -80,6 +80,7 @@ function previewKind(originalName) {
   const ext = path.extname(originalName || '').toLowerCase();
   if (ext === '.pdf') return 'pdf';
   if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) return 'image';
+  if (ext === '.docx') return 'word'; // tarayici icinde cizilebilir (.doc eski formati desteklenmez)
   if (['.txt'].includes(ext)) return 'text';
   return 'other';
 }
