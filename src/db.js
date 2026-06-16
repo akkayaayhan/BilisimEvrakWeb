@@ -254,6 +254,13 @@ const documents = {
     save();
     return record;
   },
+  update: (id, patch) => {
+    const doc = db.documents.find((d) => d.id === id);
+    if (!doc) return null;
+    Object.assign(doc, patch);
+    save();
+    return doc;
+  },
   remove: (id) => {
     const doc = db.documents.find((d) => d.id === id);
     if (!doc) return null;

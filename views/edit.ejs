@@ -1,0 +1,91 @@
+<%- include('partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Evrak Duzenle</div>
+
+<div class="form-card">
+  <h1>✏️ Evrak Bilgilerini Duzenle</h1>
+  <p class="muted">Dosya: <strong><%= doc.originalName %></strong> (dosyanin kendisi degismez, sadece bilgileri)</p>
+
+  <form action="/evrak/<%= doc.id %>/duzenle" method="post" class="form" id="editForm">
+    <label>
+      Baslik
+      <input type="text" name="title" value="<%= doc.title %>" required />
+    </label>
+
+    <label>
+      Kategori
+      <select name="categoryId" id="categorySelect" required>
+        <% categories.forEach(function(cat) { %>
+          <option value="<%= cat.id %>" <%= doc.categoryId === cat.id ? 'selected' : '' %>><%= cat.icon %> <%= cat.name %></option>
+        <% }); %>
+      </select>
+    </label>
+
+    <label>
+      Alt Kategori <small class="muted">(istege bagli)</small>
+      <select name="subcategoryId" id="subcategorySelect">
+        <option value="">— Alt kategori yok —</option>
+        <option value="__new__">➕ Yeni alt kategori ekle...</option>
+      </select>
+    </label>
+
+    <label id="newSubWrap" style="display:none">
+      Yeni Alt Kategori Adi
+      <input type="text" name="newSubcategory" id="newSubInput" placeholder="Orn: Mobil Uygulamalar" />
+    </label>
+
+    <label>
+      Aciklama (istege bagli)
+      <textarea name="description" rows="3"><%= doc.description %></textarea>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Kaydet</button>
+      <a href="javascript:history.back()" class="btn btn-ghost">Iptal</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  var ALL_SUBS = <%- JSON.stringify(subcategories.map(function(s){ return { id: s.id, categoryId: s.categoryId, name: s.name }; })) %>;
+  var CURRENT_SUB = <%- JSON.stringify(doc.subcategoryId || '') %>;
+
+  var categorySelect = document.getElementById('categorySelect');
+  var subSelect = document.getElementById('subcategorySelect');
+  var newSubWrap = document.getElementById('newSubWrap');
+  var newSubInput = document.getElementById('newSubInput');
+
+  function rebuildSubs(preselect) {
+    var catId = categorySelect.value;
+    var subs = ALL_SUBS.filter(function (s) { return s.categoryId === catId; });
+    subSelect.innerHTML = '';
+    subSelect.appendChild(new Option('— Alt kategori yok —', ''));
+    subs.forEach(function (s) {
+      var opt = new Option(s.name, s.id);
+      if (preselect && s.id === preselect) opt.selected = true;
+      subSelect.appendChild(opt);
+    });
+    subSelect.appendChild(new Option('➕ Yeni alt kategori ekle...', '__new__'));
+    toggleNewInput();
+  }
+
+  function toggleNewInput() {
+    if (subSelect.value === '__new__') {
+      newSubWrap.style.display = '';
+    } else {
+      newSubWrap.style.display = 'none';
+      newSubInput.value = '';
+    }
+  }
+
+  categorySelect.addEventListener('change', function () { rebuildSubs(null); });
+  subSelect.addEventListener('change', toggleNewInput);
+  document.getElementById('editForm').addEventListener('submit', function () {
+    if (subSelect.value === '__new__') subSelect.value = '';
+  });
+
+  // Acilista mevcut alt kategoriyi sec
+  rebuildSubs(CURRENT_SUB);
+</script>
+
+<%- include('partials/footer') %>

@@ -27,8 +27,11 @@
           </div>
         </div>
         <div class="doc-actions">
-          <a href="/goster/<%= doc.id %>" target="_blank" class="btn btn-sm">👁️</a>
+          <a href="/onizle/<%= doc.id %>" class="btn btn-sm" title="Onizle">👁️</a>
           <a href="/indir/<%= doc.id %>" class="btn btn-sm">⬇️ Indir</a>
+          <% if (currentUser.role === 'admin' || currentUser.id === doc.uploadedBy) { %>
+            <a href="/evrak/<%= doc.id %>/duzenle" class="btn btn-sm" title="Duzenle">✏️</a>
+          <% } %>
         </div>
       </div>
     <% }); %>

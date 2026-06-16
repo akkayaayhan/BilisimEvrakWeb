@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/">Ana Sayfa</a> /
+  <% if (category) { %><a href="/kategori/<%= category.slug %>"><%= category.name %></a> / <% } %>
+  Onizleme
+</div>
+
+<div class="page-head">
+  <div>
+    <h1><%= helpers.fileIcon(doc.originalName) %> <%= doc.title %></h1>
+    <p class="muted">
+      <%= doc.originalName %> · <%= helpers.formatBytes(doc.size) %> · <%= helpers.formatDate(doc.createdAt) %>
+    </p>
+  </div>
+  <div class="doc-actions">
+    <% if (currentUser.role === 'admin' || currentUser.id === doc.uploadedBy) { %>
+      <a href="/evrak/<%= doc.id %>/duzenle" class="btn btn-sm">✏️ Duzenle</a>
+    <% } %>
+    <a href="/goster/<%= doc.id %>" target="_blank" class="btn btn-sm">🔗 Yeni sekmede ac</a>
+    <a href="/indir/<%= doc.id %>" class="btn btn-primary btn-sm">⬇️ Indir</a>
+  </div>
+</div>
+
+<% if (doc.description) { %>
+  <p class="preview-desc"><%= doc.description %></p>
+<% } %>
+
+<div class="preview-area">
+  <% if (kind === 'pdf') { %>
+    <iframe src="/goster/<%= doc.id %>" class="preview-frame" title="PDF onizleme"></iframe>
+  <% } else if (kind === 'image') { %>
+    <div class="preview-image-wrap">
+      <img src="/goster/<%= doc.id %>" alt="<%= doc.title %>" />
+    </div>
+  <% } else if (kind === 'text') { %>
+    <iframe src="/goster/<%= doc.id %>" class="preview-frame preview-frame-text" title="Metin onizleme"></iframe>
+  <% } else { %>
+    <div class="empty-state">
+      <div class="big-emoji"><%= helpers.fileIcon(doc.originalName) %></div>
+      <h2>Bu dosya turu tarayicida onizlenemez</h2>
+      <p class="muted">
+        Word, Excel, PowerPoint, zip gibi dosyalar tarayicida gosterilemiyor.<br />
+        Dosyayi indirip bilgisayarinizda acabilirsiniz.
+      </p>
+      <a href="/indir/<%= doc.id %>" class="btn btn-primary">⬇️ Dosyayi Indir</a>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

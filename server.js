@@ -76,6 +76,14 @@ function formatDate(iso) {
   });
 }
 
+function previewKind(originalName) {
+  const ext = path.extname(originalName || '').toLowerCase();
+  if (ext === '.pdf') return 'pdf';
+  if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) return 'image';
+  if (['.txt'].includes(ext)) return 'text';
+  return 'other';
+}
+
 function fileIcon(originalName) {
   const ext = path.extname(originalName || '').toLowerCase();
   if (['.pdf'].includes(ext)) return '📕';
@@ -91,7 +99,7 @@ function fileIcon(originalName) {
 // Her istekte gorunumlere ortak veriler aktar
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
-  res.locals.helpers = { formatBytes, formatDate, fileIcon };
+  res.locals.helpers = { formatBytes, formatDate, fileIcon, previewKind };
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   res.locals.query = '';
@@ -278,6 +286,70 @@ app.get('/goster/:id', requireAuth, (req, res) => {
   }
   res.setHeader('Content-Disposition', 'inline; filename="' + encodeURIComponent(doc.originalName) + '"');
   res.sendFile(filePath);
+});
+
+// ---------- Evrak onizleme (site icinde) ----------
+app.get('/onizle/:id', requireAuth, (req, res) => {
+  const doc = db.documents.findById(req.params.id);
+  if (!doc) {
+    return res.status(404).render('error', { title: 'Bulunamadi', message: 'Evrak bulunamadi.' });
+  }
+  const category = db.categories.findById(doc.categoryId);
+  res.render('preview', { title: doc.title, doc, category, kind: previewKind(doc.originalName) });
+});
+
+// ---------- Evrak bilgisi duzenleme (yukleyen kisi veya admin) ----------
+app.get('/evrak/:id/duzenle', requireAuth, (req, res) => {
+  const doc = db.documents.findById(req.params.id);
+  if (!doc) {
+    return res.status(404).render('error', { title: 'Bulunamadi', message: 'Evrak bulunamadi.' });
+  }
+  const isOwner = doc.uploadedBy === req.session.user.id;
+  if (!isOwner && req.session.user.role !== 'admin') {
+    return res.status(403).render('error', { title: 'Yetkisiz', message: 'Bu evraki duzenleme yetkiniz yok.' });
+  }
+  res.render('edit', {
+    title: 'Evrak Duzenle',
+    doc,
+    categories: db.categories.all(),
+    subcategories: db.subcategories.all()
+  });
+});
+
+app.post('/evrak/:id/duzenle', requireAuth, (req, res) => {
+  const doc = db.documents.findById(req.params.id);
+  if (!doc) {
+    setFlash(req, 'error', 'Evrak bulunamadi.');
+    return res.redirect('/');
+  }
+  const isOwner = doc.uploadedBy === req.session.user.id;
+  if (!isOwner && req.session.user.role !== 'admin') {
+    return res.status(403).render('error', { title: 'Yetkisiz', message: 'Bu evraki duzenleme yetkiniz yok.' });
+  }
+  const { title, description, categoryId, subcategoryId, newSubcategory } = req.body;
+  const category = db.categories.findById(categoryId);
+  if (!category) {
+    setFlash(req, 'error', 'Gecerli bir kategori secin.');
+    return res.redirect('/evrak/' + doc.id + '/duzenle');
+  }
+  // Alt kategoriyi coz (yukleme ile ayni mantik)
+  let subId = null;
+  if (newSubcategory && newSubcategory.trim()) {
+    let sub = db.subcategories.findByNameInCategory(category.id, newSubcategory);
+    if (!sub) sub = db.subcategories.create({ categoryId: category.id, name: newSubcategory });
+    subId = sub.id;
+  } else if (subcategoryId) {
+    const sub = db.subcategories.findById(subcategoryId);
+    if (sub && sub.categoryId === category.id) subId = sub.id;
+  }
+  db.documents.update(doc.id, {
+    title: (title || doc.originalName).trim(),
+    description: description || '',
+    categoryId: category.id,
+    subcategoryId: subId
+  });
+  setFlash(req, 'success', 'Evrak bilgileri guncellendi.');
+  res.redirect('/kategori/' + category.slug);
 });
 
 // ---------- Evrak silme (yukleyen kisi veya admin) ----------
