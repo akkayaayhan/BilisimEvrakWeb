@@ -1,8 +1,16 @@
   </main>
 
-  <footer class="site-footer">
-    <p>Bilisim Teknolojileri Evrak Yonetim Sistemi · <%= new Date().getFullYear() %></p>
-  </footer>
+  <% if (currentUser) { %>
+      <footer class="content-footer">
+        <p>Bilişim Evrak · Evrak Yönetim Sistemi · <%= new Date().getFullYear() %></p>
+      </footer>
+    </div><!-- /.main-area -->
+  </div><!-- /.app-shell -->
+  <% } else { %>
+    <footer class="site-footer">
+      <p>Bilişim Evrak · <%= new Date().getFullYear() %></p>
+    </footer>
+  <% } %>
 
   <script src="/public/js/main.js"></script>
 </body>

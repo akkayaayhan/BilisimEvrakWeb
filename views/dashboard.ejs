@@ -1,13 +1,18 @@
 <%- include('partials/header') %>
 
-<div class="page-head">
-  <div>
-    <h1>Ana Sayfa</h1>
-    <p class="muted">Toplam <strong><%= totalDocs %></strong> evrak · <strong><%= categories.length %></strong> kategori</p>
+<div class="welcome-card">
+  <div class="welcome-content">
+    <h1>Merhaba <%= currentUser.fullName || currentUser.username %> 🎉</h1>
+    <p>
+      Bilişim Evrak arşivine hoş geldiniz. Şu an <strong><%= totalDocs %></strong> evrak ve
+      <strong><%= categories.length %></strong> kategori mevcut. Soldaki menüden kategorilere ulaşabilir,
+      üstteki kutudan arama yapabilirsiniz.
+    </p>
+    <% if (currentUser.role === 'admin') { %>
+      <a href="/yukle" class="btn btn-primary">⬆️ Evrak Yükle</a>
+    <% } %>
   </div>
-  <% if (currentUser.role === 'admin') { %>
-    <a href="/yukle" class="btn btn-primary">⬆️ Yeni Evrak Yukle</a>
-  <% } %>
+  <div class="welcome-emoji">🏆</div>
 </div>
 
 <h2 class="section-title">Kategoriler</h2>

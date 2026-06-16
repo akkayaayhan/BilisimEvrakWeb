@@ -104,6 +104,9 @@ app.use((req, res, next) => {
   res.locals.flash = req.session.flash || null;
   delete req.session.flash;
   res.locals.query = '';
+  // Yan menude (sidebar) gosterilecek kategoriler - her sayfada lazim
+  res.locals.navCategories = db.categories.all();
+  res.locals.currentPath = req.path;
   next();
 });
 
