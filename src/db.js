@@ -61,6 +61,8 @@ function ensureDataDir() {
 }
 
 function load() {
+  console.log('[config] DATA_DIR (kayit klasoru) =', DATA_DIR);
+  console.log('[config] DATA_DIR env degeri      =', process.env.DATA_DIR || '(BOS - okunmadi!)');
   ensureDataDir();
   if (fs.existsSync(DB_FILE)) {
     try {

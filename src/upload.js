@@ -11,6 +11,9 @@ const UPLOAD_DIR = process.env.UPLOADS_DIR
   ? path.resolve(process.env.UPLOADS_DIR)
   : path.join(__dirname, '..', 'uploads');
 
+console.log('[config] UPLOADS_DIR (dosya klasoru) =', UPLOAD_DIR);
+console.log('[config] UPLOADS_DIR env degeri       =', process.env.UPLOADS_DIR || '(BOS - okunmadi!)');
+
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
