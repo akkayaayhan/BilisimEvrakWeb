@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">📂</div>
+    <h1>Üye Ol</h1>
+
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div class="flash flash-success" style="text-align:left"><%= success %></div>
+      <a href="/giris" class="btn btn-primary btn-block">Giriş Sayfasına Dön</a>
+    <% } else { %>
+      <p class="muted">Hesap oluşturun — yönetici onayından sonra giriş yapabilirsiniz.</p>
+
+      <% if (error) { %>
+        <div class="flash flash-error"><%= error %></div>
+      <% } %>
+
+      <form action="/uye-ol" method="post" class="form">
+        <label>
+          Ad Soyad
+          <input type="text" name="fullName" value="<%= form.fullName || '' %>" required autofocus />
+        </label>
+        <label>
+          Kullanıcı Adı
+          <input type="text" name="username" value="<%= form.username || '' %>" autocomplete="username" minlength="3" required />
+          <small class="muted">Sadece harf, rakam, nokta ve alt çizgi. En az 3 karakter.</small>
+        </label>
+        <label>
+          Şifre
+          <input type="password" name="password" autocomplete="new-password" minlength="6" required />
+        </label>
+        <label>
+          Şifre (Tekrar)
+          <input type="password" name="password2" autocomplete="new-password" minlength="6" required />
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">Üye Ol</button>
+      </form>
+
+      <p class="muted" style="text-align:center; margin-top:16px">
+        Zaten hesabınız var mı? <a href="/giris">Giriş Yap</a>
+      </p>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

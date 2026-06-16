@@ -31,7 +31,7 @@
           <a href="/yukle" class="nav-item <%= currentPath === '/yukle' ? 'active' : '' %>"><span class="nav-ico">⬆️</span><span class="nav-label">Evrak Yükle</span></a>
           <a href="/yonetim/kategoriler" class="nav-item <%= currentPath === '/yonetim/kategoriler' ? 'active' : '' %>"><span class="nav-ico">🗃️</span><span class="nav-label">Kategoriler</span></a>
           <a href="/yonetim/donemler" class="nav-item <%= currentPath === '/yonetim/donemler' ? 'active' : '' %>"><span class="nav-ico">📅</span><span class="nav-label">Dönemler</span></a>
-          <a href="/yonetim/kullanicilar" class="nav-item <%= currentPath === '/yonetim/kullanicilar' ? 'active' : '' %>"><span class="nav-ico">👤</span><span class="nav-label">Kullanıcılar</span></a>
+          <a href="/yonetim/kullanicilar" class="nav-item <%= currentPath === '/yonetim/kullanicilar' ? 'active' : '' %>"><span class="nav-ico">👤</span><span class="nav-label">Kullanıcılar</span><% if (pendingCount > 0) { %><span class="nav-badge"><%= pendingCount %></span><% } %></a>
           <a href="/yonetim/yedek" class="nav-item <%= currentPath === '/yonetim/yedek' ? 'active' : '' %>"><span class="nav-ico">💾</span><span class="nav-label">Yedek</span></a>
         <% } %>
 

@@ -6,6 +6,36 @@
   <h1>👤 Kullanici Yonetimi</h1>
 </div>
 
+<% if (pending.length > 0) { %>
+  <div class="pending-box">
+    <h2 class="section-title" style="margin-top:0">⏳ Onay Bekleyen Uyeler (<%= pending.length %>)</h2>
+    <div class="table-wrap" style="margin-top:0">
+      <table class="table">
+        <thead>
+          <tr><th>Kullanici Adi</th><th>Ad Soyad</th><th>Basvuru</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% pending.forEach(function(u) { %>
+            <tr>
+              <td><strong><%= u.username %></strong></td>
+              <td><%= u.fullName || '—' %></td>
+              <td class="muted"><%= helpers.formatDate(u.createdAt) %></td>
+              <td class="cell-actions">
+                <form action="/yonetim/kullanicilar/<%= u.id %>/onayla" method="post" style="display:inline">
+                  <button type="submit" class="btn btn-sm btn-primary">✓ Onayla</button>
+                </form>
+                <form action="/yonetim/kullanicilar/<%= u.id %>/sil" method="post" class="js-confirm" style="display:inline" data-confirm="'<%= u.username %>' basvurusunu reddedip silmek istiyor musunuz?">
+                  <button type="submit" class="btn btn-sm btn-danger">Reddet</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
 <div class="form-card">
   <h2 class="section-title">Yeni Kullanici Ekle</h2>
   <form action="/yonetim/kullanicilar" method="post" class="form">
@@ -23,9 +53,11 @@
     <div class="form-actions">
       <button type="submit" class="btn btn-primary">Kullanici Olustur</button>
     </div>
+    <small class="muted">Buradan eklediginiz kullanicilar dogrudan onayli olur.</small>
   </form>
 </div>
 
+<h2 class="section-title">Onayli Kullanicilar (<%= users.length %>)</h2>
 <div class="table-wrap">
   <table class="table">
     <thead>

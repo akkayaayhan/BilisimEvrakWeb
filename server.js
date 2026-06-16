@@ -107,6 +107,9 @@ app.use((req, res, next) => {
   // Yan menude (sidebar) gosterilecek kategoriler - her sayfada lazim
   res.locals.navCategories = db.categories.all();
   res.locals.currentPath = req.path;
+  // Yoneticiye onay bekleyen uye sayisini menude goster
+  res.locals.pendingCount =
+    req.session.user && req.session.user.role === 'admin' ? db.users.countPending() : 0;
   next();
 });
 
@@ -142,6 +145,12 @@ app.post('/giris', (req, res) => {
       error: 'Kullanici adi veya sifre hatali.'
     });
   }
+  if (user.status === 'pending') {
+    return res.status(403).render('login', {
+      title: 'Giris Yap',
+      error: 'Hesabiniz henuz yonetici tarafindan onaylanmadi. Onaylandiktan sonra giris yapabilirsiniz.'
+    });
+  }
   req.session.userId = user.id;
   req.session.user = {
     id: user.id,
@@ -168,6 +177,42 @@ app.post('/giris', (req, res) => {
 
 app.post('/cikis', (req, res) => {
   req.session.destroy(() => res.redirect('/giris'));
+});
+
+// ---------- Uye Ol (kayit) ----------
+app.get('/uye-ol', (req, res) => {
+  if (req.session.userId) return res.redirect('/');
+  res.render('register', { title: 'Uye Ol', error: null, form: {} });
+});
+
+app.post('/uye-ol', (req, res) => {
+  const { fullName, username, password, password2 } = req.body;
+  const form = { fullName: fullName || '', username: username || '' };
+  const fail = (msg) =>
+    res.status(400).render('register', { title: 'Uye Ol', error: msg, form });
+
+  if (!fullName || !fullName.trim()) return fail('Ad Soyad gerekli.');
+  if (!username || !username.trim() || username.trim().length < 3)
+    return fail('Kullanici adi en az 3 karakter olmali.');
+  if (!/^[a-zA-Z0-9._]+$/.test(username.trim()))
+    return fail('Kullanici adi sadece harf, rakam, nokta ve alt cizgi icerebilir.');
+  if (!password || password.length < 6) return fail('Sifre en az 6 karakter olmali.');
+  if (password !== password2) return fail('Sifreler eslesmiyor.');
+  if (db.users.findByUsername(username)) return fail('Bu kullanici adi zaten alinmis.');
+
+  db.users.create({
+    username,
+    fullName,
+    passwordHash: hashPassword(password),
+    role: 'user',
+    status: 'pending'
+  });
+  res.render('register', {
+    title: 'Uye Ol',
+    error: null,
+    form: {},
+    success: 'Kaydiniz alindi! Hesabiniz yonetici onayindan sonra aktiflesecek. Onaylandiktan sonra giris yapabilirsiniz.'
+  });
 });
 
 // ---------- Ana Sayfa (Panel) ----------
@@ -631,7 +676,22 @@ app.get('/yonetim/yedek/db.json', requireAuth, requireAdmin, (req, res) => {
 
 // ---------- Kullanici yonetimi ----------
 app.get('/yonetim/kullanicilar', requireAuth, requireAdmin, (req, res) => {
-  res.render('admin/users', { title: 'Kullanici Yonetimi', users: db.users.all() });
+  res.render('admin/users', {
+    title: 'Kullanici Yonetimi',
+    pending: db.users.pending(),
+    users: db.users.all().filter((u) => u.status !== 'pending')
+  });
+});
+
+app.post('/yonetim/kullanicilar/:id/onayla', requireAuth, requireAdmin, (req, res) => {
+  const user = db.users.findById(req.params.id);
+  if (!user) {
+    setFlash(req, 'error', 'Kullanici bulunamadi.');
+    return res.redirect('/yonetim/kullanicilar');
+  }
+  db.users.update(user.id, { status: 'approved' });
+  setFlash(req, 'success', `${user.username} onaylandi, artik giris yapabilir.`);
+  res.redirect('/yonetim/kullanicilar');
 });
 
 app.post('/yonetim/kullanicilar', requireAuth, requireAdmin, (req, res) => {

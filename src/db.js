@@ -129,6 +129,7 @@ function seed(hashPassword) {
       fullName: 'Yonetici',
       passwordHash: hashPassword(password),
       role: 'admin',
+      status: 'approved',
       createdAt: new Date().toISOString()
     });
     changed = true;
@@ -145,19 +146,26 @@ const users = {
   findById: (id) => db.users.find((u) => u.id === id),
   findByUsername: (username) =>
     db.users.find((u) => u.username.toLowerCase() === String(username).toLowerCase()),
-  create: ({ username, fullName, passwordHash, role }) => {
+  create: ({ username, fullName, passwordHash, role, status }) => {
     const user = {
       id: newId(),
       username: username.trim(),
       fullName: (fullName || '').trim(),
       passwordHash,
       role: role === 'admin' ? 'admin' : 'user',
+      // 'pending' = yonetici onayi bekliyor, 'approved' = onayli
+      status: status === 'pending' ? 'pending' : 'approved',
       createdAt: new Date().toISOString()
     };
     db.users.push(user);
     save();
     return user;
   },
+  pending: () =>
+    db.users
+      .filter((u) => u.status === 'pending')
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+  countPending: () => db.users.filter((u) => u.status === 'pending').length,
   update: (id, patch) => {
     const user = db.users.find((u) => u.id === id);
     if (!user) return null;
