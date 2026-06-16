@@ -1,0 +1,66 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Yonetim / Yedek</div>
+
+<div class="page-head">
+  <div>
+    <h1>💾 Yedek ve Veri Ozeti</h1>
+    <p class="muted">Verilerinizin durumunu gorun ve yedek alin.</p>
+  </div>
+  <a href="/yonetim/yedek/db.json" class="btn btn-primary">⬇️ Veri Yedegini Indir (db.json)</a>
+</div>
+
+<div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">
+  <div class="stat-card"><div class="stat-num"><%= docs.length %></div><div class="stat-label">Evrak</div></div>
+  <div class="stat-card"><div class="stat-num"><%= catCount %></div><div class="stat-label">Kategori</div></div>
+  <div class="stat-card"><div class="stat-num"><%= subCount %></div><div class="stat-label">Alt Kategori</div></div>
+  <div class="stat-card"><div class="stat-num"><%= termCount %></div><div class="stat-label">Donem</div></div>
+  <div class="stat-card"><div class="stat-num"><%= userCount %></div><div class="stat-label">Kullanici</div></div>
+  <div class="stat-card"><div class="stat-num"><%= uploadCount %></div><div class="stat-label">Yuklu Dosya</div></div>
+</div>
+
+<div class="flash flash-success" style="margin-top:18px">
+  ✅ Kayit dosyasi (db.json): <strong><%= helpers.formatBytes(dbSize) %></strong>
+  <% if (dbMtime) { %> · Son guncelleme: <strong><%= helpers.formatDate(dbMtime) %></strong><% } %>
+  · Sunucudaki dosya sayisi: <strong><%= uploadCount %></strong>
+</div>
+
+<h2 class="section-title">Kayitli Evraklar (<%= docs.length %>)</h2>
+<% if (docs.length === 0) { %>
+  <div class="empty-state">
+    <p>Henuz hic evrak yuklenmemis.</p>
+    <a href="/yukle" class="btn btn-primary">Ilk evraki yukle</a>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Baslik</th><th>Dosya</th><th>Boyut</th><th>Tarih</th></tr>
+      </thead>
+      <tbody>
+        <% docs.forEach(function(d) { %>
+          <tr>
+            <td><strong><%= d.title %></strong></td>
+            <td class="muted"><%= helpers.fileIcon(d.originalName) %> <%= d.originalName %></td>
+            <td class="muted"><%= helpers.formatBytes(d.size) %></td>
+            <td class="muted"><%= helpers.formatDate(d.createdAt) %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<div class="form-card" style="margin-top:24px;max-width:none">
+  <h2 class="section-title">📌 Yedekleme Hakkinda</h2>
+  <p class="muted" style="line-height:1.7">
+    • <strong>Veri Yedegini Indir</strong> butonu, tum kayitlarinizi (evrak bilgileri, kategoriler, donemler, kullanicilar)
+    tek bir <code>db.json</code> dosyasi olarak bilgisayariniza indirir. Duzenli olarak almanizi oneririz.<br>
+    • Evrak <strong>dosyalarinin</strong> kendisi (Word, PDF) ayri tutulur; her birini ilgili evragin yanindaki
+    <strong>⬇️ Indir</strong> ile alabilirsiniz.<br>
+    • Bu sayfadaki sayilar uygulamanin <strong>gercek</strong> verisini gosterir — yani "Evrak: <%= docs.length %>"
+    yaziyorsa, o kadar evrak guvenle kayitlidir.
+  </p>
+</div>
+
+<%- include('../partials/footer') %>

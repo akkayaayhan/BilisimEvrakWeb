@@ -226,6 +226,18 @@ a:hover { text-decoration: underline; }
 }
 .badge-admin { background: #eff6ff; color: var(--primary); border-color: #bfdbfe; }
 
+/* ---------- Stat cards (yedek/ozet) ---------- */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.stat-num { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+.stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+
 /* ---------- Document list ---------- */
 .doc-list { display: flex; flex-direction: column; gap: 10px; }
 .doc-row {

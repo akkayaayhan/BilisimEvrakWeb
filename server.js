@@ -594,6 +594,44 @@ app.get('/yonetim/tani', requireAuth, requireAdmin, (req, res) => {
   res.send(html);
 });
 
+// ---------- Yedek / Veri ozeti ----------
+app.get('/yonetim/yedek', requireAuth, requireAdmin, (req, res) => {
+  const docs = db.documents.all();
+  const dbStat = fs.existsSync(db.DB_FILE) ? fs.statSync(db.DB_FILE) : null;
+  let uploadFiles = [];
+  try {
+    uploadFiles = fs.readdirSync(UPLOAD_DIR).filter((f) => !f.startsWith('.'));
+  } catch (e) {
+    // klasor okunamadi
+  }
+  let uploadTotal = 0;
+  uploadFiles.forEach((f) => {
+    try {
+      uploadTotal += fs.statSync(path.join(UPLOAD_DIR, f)).size;
+    } catch (e) {}
+  });
+  res.render('admin/backup', {
+    title: 'Yedek ve Veri Ozeti',
+    docs,
+    catCount: db.categories.all().length,
+    subCount: db.subcategories.all().length,
+    termCount: db.terms.all().length,
+    userCount: db.users.all().length,
+    dbSize: dbStat ? dbStat.size : 0,
+    dbMtime: dbStat ? dbStat.mtime.toISOString() : null,
+    uploadCount: uploadFiles.length
+  });
+});
+
+app.get('/yonetim/yedek/db.json', requireAuth, requireAdmin, (req, res) => {
+  if (!fs.existsSync(db.DB_FILE)) {
+    setFlash(req, 'error', 'Veri dosyasi (db.json) bulunamadi.');
+    return res.redirect('/yonetim/yedek');
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  res.download(db.DB_FILE, `evrak-yedek-${today}.json`);
+});
+
 // ---------- Kullanici yonetimi ----------
 app.get('/yonetim/kullanicilar', requireAuth, requireAdmin, (req, res) => {
   res.render('admin/users', { title: 'Kullanici Yonetimi', users: db.users.all() });
