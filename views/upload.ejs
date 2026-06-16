@@ -1,0 +1,42 @@
+<%- include('partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Evrak Yukle</div>
+
+<div class="form-card">
+  <h1>⬆️ Evrak Yukle</h1>
+
+  <form action="/yukle" method="post" enctype="multipart/form-data" class="form">
+    <label>
+      Baslik
+      <input type="text" name="title" placeholder="Orn: 10. Sinif Yillik Plani 2025-2026" required />
+    </label>
+
+    <label>
+      Kategori
+      <select name="categoryId" required>
+        <option value="">— Kategori secin —</option>
+        <% categories.forEach(function(cat) { %>
+          <option value="<%= cat.id %>" <%= preselect === cat.id ? 'selected' : '' %>><%= cat.icon %> <%= cat.name %></option>
+        <% }); %>
+      </select>
+    </label>
+
+    <label>
+      Aciklama (istege bagli)
+      <textarea name="description" rows="3" placeholder="Kisa not..."></textarea>
+    </label>
+
+    <label>
+      Dosya
+      <input type="file" name="file" required />
+      <small class="muted">PDF, Word, Excel, PowerPoint, resim, zip vb. desteklenir.</small>
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Yukle</button>
+      <a href="/" class="btn btn-ghost">Iptal</a>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/footer') %>

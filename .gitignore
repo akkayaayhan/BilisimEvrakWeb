@@ -1,0 +1,29 @@
+# Bagimliliklar
+node_modules/
+
+# Ortam degiskenleri (gizli bilgiler - ASLA git'e gonderme)
+.env
+
+# Yuklenen evrak dosyalari (deploy sirasinda KORUNMALI, git'e girmemeli)
+uploads/*
+!uploads/.gitkeep
+
+# Veritabani / kayit dosyalari (kalici veri - git'e girmemeli)
+data/*
+!data/.gitkeep
+
+# Oturum (session) dosyalari
+sessions/
+
+# Loglar
+*.log
+npm-debug.log*
+
+# Isletim sistemi
+.DS_Store
+Thumbs.db
+
+# Editor / arac dosyalari
+.claude/
+.vscode/
+.idea/

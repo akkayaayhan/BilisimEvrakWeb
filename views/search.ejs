@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Arama Sonuclari</h1>
+    <% if (q) { %><p class="muted">"<strong><%= q %></strong>" icin <%= results.length %> sonuc</p><% } %>
+  </div>
+</div>
+
+<% if (!q) { %>
+  <div class="empty-state"><p>Aramak istediginiz kelimeyi ust kutuya yazin.</p></div>
+<% } else if (results.length === 0) { %>
+  <div class="empty-state"><p>Sonuc bulunamadi.</p></div>
+<% } else { %>
+  <div class="doc-list">
+    <% results.forEach(function(doc) { %>
+      <% var cat = categoryMap[doc.categoryId]; %>
+      <div class="doc-row">
+        <div class="doc-icon"><%= helpers.fileIcon(doc.originalName) %></div>
+        <div class="doc-main">
+          <div class="doc-title"><%= doc.title %></div>
+          <% if (doc.description) { %><div class="doc-desc"><%= doc.description %></div><% } %>
+          <div class="doc-meta">
+            <% if (cat) { %><a href="/kategori/<%= cat.slug %>" class="tag"><%= cat.icon %> <%= cat.name %></a><% } %>
+            <span><%= helpers.formatBytes(doc.size) %></span>
+            <span><%= helpers.formatDate(doc.createdAt) %></span>
+          </div>
+        </div>
+        <div class="doc-actions">
+          <a href="/goster/<%= doc.id %>" target="_blank" class="btn btn-sm">👁️</a>
+          <a href="/indir/<%= doc.id %>" class="btn btn-sm">⬇️ Indir</a>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

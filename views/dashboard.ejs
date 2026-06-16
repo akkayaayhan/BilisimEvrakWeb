@@ -1,0 +1,55 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Ana Sayfa</h1>
+    <p class="muted">Toplam <strong><%= totalDocs %></strong> evrak · <strong><%= categories.length %></strong> kategori</p>
+  </div>
+  <a href="/yukle" class="btn btn-primary">⬆️ Yeni Evrak Yukle</a>
+</div>
+
+<h2 class="section-title">Kategoriler</h2>
+<div class="card-grid">
+  <% categories.forEach(function(cat) { %>
+    <a href="/kategori/<%= cat.slug %>" class="category-card">
+      <div class="category-icon"><%= cat.icon %></div>
+      <div class="category-info">
+        <h3><%= cat.name %></h3>
+        <span class="badge"><%= cat.count %> evrak</span>
+      </div>
+    </a>
+  <% }); %>
+  <% if (categories.length === 0) { %>
+    <p class="muted">Henuz kategori yok.</p>
+  <% } %>
+</div>
+
+<h2 class="section-title">Son Eklenen Evraklar</h2>
+<% if (recent.length === 0) { %>
+  <div class="empty-state">
+    <p>Henuz hic evrak yuklenmemis.</p>
+    <a href="/yukle" class="btn btn-primary">Ilk evraki yukle</a>
+  </div>
+<% } else { %>
+  <div class="doc-list">
+    <% recent.forEach(function(doc) { %>
+      <% var cat = categoryMap[doc.categoryId]; %>
+      <div class="doc-row">
+        <div class="doc-icon"><%= helpers.fileIcon(doc.originalName) %></div>
+        <div class="doc-main">
+          <div class="doc-title"><%= doc.title %></div>
+          <div class="doc-meta">
+            <% if (cat) { %><a href="/kategori/<%= cat.slug %>" class="tag"><%= cat.icon %> <%= cat.name %></a><% } %>
+            <span><%= helpers.formatBytes(doc.size) %></span>
+            <span><%= helpers.formatDate(doc.createdAt) %></span>
+          </div>
+        </div>
+        <div class="doc-actions">
+          <a href="/indir/<%= doc.id %>" class="btn btn-sm">⬇️ Indir</a>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

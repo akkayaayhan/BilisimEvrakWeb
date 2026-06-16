@@ -1,0 +1,47 @@
+<%- include('partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / <%= category.name %></div>
+
+<div class="page-head">
+  <div>
+    <h1><%= category.icon %> <%= category.name %></h1>
+    <p class="muted"><%= documents.length %> evrak</p>
+  </div>
+  <a href="/yukle?kategori=<%= category.id %>" class="btn btn-primary">⬆️ Bu Kategoriye Yukle</a>
+</div>
+
+<% if (documents.length === 0) { %>
+  <div class="empty-state">
+    <p>Bu kategoride henuz evrak yok.</p>
+    <a href="/yukle?kategori=<%= category.id %>" class="btn btn-primary">Evrak yukle</a>
+  </div>
+<% } else { %>
+  <div class="doc-list">
+    <% documents.forEach(function(doc) { %>
+      <div class="doc-row">
+        <div class="doc-icon"><%= helpers.fileIcon(doc.originalName) %></div>
+        <div class="doc-main">
+          <div class="doc-title"><%= doc.title %></div>
+          <% if (doc.description) { %><div class="doc-desc"><%= doc.description %></div><% } %>
+          <div class="doc-meta">
+            <span title="Dosya adi"><%= doc.originalName %></span>
+            <span><%= helpers.formatBytes(doc.size) %></span>
+            <span><%= helpers.formatDate(doc.createdAt) %></span>
+            <% if (doc.uploadedByName) { %><span>👤 <%= doc.uploadedByName %></span><% } %>
+          </div>
+        </div>
+        <div class="doc-actions">
+          <a href="/goster/<%= doc.id %>" target="_blank" class="btn btn-sm" title="Tarayicida ac">👁️</a>
+          <a href="/indir/<%= doc.id %>" class="btn btn-sm">⬇️ Indir</a>
+          <% if (currentUser.role === 'admin' || currentUser.id === doc.uploadedBy) { %>
+            <form action="/evrak/<%= doc.id %>/sil" method="post" class="js-confirm" data-confirm="Bu evraki silmek istediginize emin misiniz?">
+              <button type="submit" class="btn btn-sm btn-danger" title="Sil">🗑️</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Yonetim / Kullanicilar</div>
+
+<div class="page-head">
+  <h1>👤 Kullanici Yonetimi</h1>
+</div>
+
+<div class="form-card">
+  <h2 class="section-title">Yeni Kullanici Ekle</h2>
+  <form action="/yonetim/kullanicilar" method="post" class="form">
+    <div class="grid-2">
+      <label>Kullanici Adi<input type="text" name="username" required /></label>
+      <label>Ad Soyad<input type="text" name="fullName" placeholder="istege bagli" /></label>
+      <label>Sifre<input type="password" name="password" minlength="6" required /></label>
+      <label>Rol
+        <select name="role">
+          <option value="user">Kullanici</option>
+          <option value="admin">Yonetici</option>
+        </select>
+      </label>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Kullanici Olustur</button>
+    </div>
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Kullanici Adi</th><th>Ad Soyad</th><th>Rol</th><th>Eklenme</th><th>Sifre</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% users.forEach(function(u) { %>
+        <tr>
+          <td><strong><%= u.username %></strong></td>
+          <td><%= u.fullName || '—' %></td>
+          <td>
+            <% if (u.role === 'admin') { %><span class="badge badge-admin">Yonetici</span>
+            <% } else { %><span class="badge">Kullanici</span><% } %>
+          </td>
+          <td class="muted"><%= helpers.formatDate(u.createdAt) %></td>
+          <td>
+            <form action="/yonetim/kullanicilar/<%= u.id %>/sifre" method="post" class="form-inline">
+              <input type="password" name="password" placeholder="Yeni sifre" minlength="6" required style="width:130px" />
+              <button type="submit" class="btn btn-sm">Degistir</button>
+            </form>
+          </td>
+          <td class="cell-actions">
+            <% if (u.id !== currentUser.id) { %>
+              <form action="/yonetim/kullanicilar/<%= u.id %>/sil" method="post" class="js-confirm" data-confirm="'<%= u.username %>' kullanicisini silmek istiyor musunuz?">
+                <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+              </form>
+            <% } else { %>
+              <span class="muted">(siz)</span>
+            <% } %>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

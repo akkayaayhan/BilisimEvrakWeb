@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %> · Bilisim Evrak Sistemi</title>
+  <link rel="stylesheet" href="/public/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📂</text></svg>" />
+</head>
+<body>
+  <% if (currentUser) { %>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="brand">📂 <span>Evrak Sistemi</span></a>
+
+      <form action="/ara" method="get" class="search-form">
+        <input type="search" name="q" placeholder="Evrak ara..." value="<%= typeof q !== 'undefined' ? q : '' %>" />
+        <button type="submit" aria-label="Ara">🔍</button>
+      </form>
+
+      <nav class="topnav">
+        <a href="/yukle" class="btn btn-primary btn-sm">⬆️ Evrak Yukle</a>
+        <% if (currentUser.role === 'admin') { %>
+          <div class="dropdown">
+            <button class="btn btn-ghost btn-sm">⚙️ Yonetim ▾</button>
+            <div class="dropdown-menu">
+              <a href="/yonetim/kategoriler">🗃️ Kategoriler</a>
+              <a href="/yonetim/kullanicilar">👤 Kullanicilar</a>
+            </div>
+          </div>
+        <% } %>
+        <div class="dropdown">
+          <button class="btn btn-ghost btn-sm"><%= currentUser.fullName || currentUser.username %> ▾</button>
+          <div class="dropdown-menu dropdown-right">
+            <a href="/hesabim">🔑 Hesabim</a>
+            <form action="/cikis" method="post"><button type="submit">🚪 Cikis Yap</button></form>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <% } %>
+
+  <main class="container">
+    <% if (typeof flash !== 'undefined' && flash) { %>
+      <div class="flash flash-<%= flash.type %>"><%= flash.message %></div>
+    <% } %>

@@ -1,0 +1,27 @@
+<%- include('partials/header') %>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">📂</div>
+    <h1>Evrak Sistemi</h1>
+    <p class="muted">Devam etmek icin giris yapin</p>
+
+    <% if (error) { %>
+      <div class="flash flash-error"><%= error %></div>
+    <% } %>
+
+    <form action="/giris" method="post" class="form">
+      <label>
+        Kullanici Adi
+        <input type="text" name="username" autocomplete="username" required autofocus />
+      </label>
+      <label>
+        Sifre
+        <input type="password" name="password" autocomplete="current-password" required />
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Giris Yap</button>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

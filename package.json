@@ -1,0 +1,32 @@
+{
+  "name": "bilisim-evrak-web",
+  "version": "1.0.0",
+  "description": "Bilisim Teknolojileri ogretmenleri icin evrak (yillik plan, zumre, yazili vb.) yonetim ve arsivleme sistemi",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "evrak",
+    "dokuman",
+    "egitim",
+    "ogretmen",
+    "express"
+  ],
+  "author": "Ayhan Akkaya",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "multer": "^2.2.0",
+    "session-file-store": "^1.5.0"
+  }
+}

@@ -1,0 +1,32 @@
+<%- include('partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Hesabim</div>
+
+<div class="form-card">
+  <h1>🔑 Hesabim</h1>
+  <p class="muted">
+    Kullanici adi: <strong><%= currentUser.username %></strong> ·
+    Rol: <strong><%= currentUser.role === 'admin' ? 'Yonetici' : 'Kullanici' %></strong>
+  </p>
+
+  <h2 class="section-title">Sifre Degistir</h2>
+  <form action="/hesabim/sifre" method="post" class="form">
+    <label>
+      Mevcut Sifre
+      <input type="password" name="currentPassword" autocomplete="current-password" required />
+    </label>
+    <label>
+      Yeni Sifre
+      <input type="password" name="newPassword" autocomplete="new-password" minlength="6" required />
+    </label>
+    <label>
+      Yeni Sifre (Tekrar)
+      <input type="password" name="newPassword2" autocomplete="new-password" minlength="6" required />
+    </label>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Sifreyi Guncelle</button>
+    </div>
+  </form>
+</div>
+
+<%- include('partials/footer') %>
