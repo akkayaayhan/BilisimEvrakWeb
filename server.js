@@ -476,6 +476,58 @@ app.post('/yonetim/alt-kategori/:id/sil', requireAuth, requireAdmin, (req, res) 
   res.redirect('/yonetim/kategoriler');
 });
 
+// ---------- Tani (teshis) sayfasi: veri klasorleri dogru mu? ----------
+app.get('/yonetim/tani', requireAuth, requireAdmin, (req, res) => {
+  function check(dir) {
+    const result = { dir, exists: false, writable: false, error: null };
+    try {
+      result.exists = fs.existsSync(dir);
+      const testFile = path.join(dir, '.yazma-testi-' + Date.now());
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
+      result.writable = true;
+    } catch (e) {
+      result.error = e.message;
+    }
+    return result;
+  }
+  const dataCheck = check(db.DATA_DIR);
+  const uploadCheck = check(UPLOAD_DIR);
+  const dbExists = fs.existsSync(db.DB_FILE);
+
+  const row = (label, value, ok) =>
+    `<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${label}</td>
+     <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace">${value}</td>
+     <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${ok ? '✅' : '❌'}</td></tr>`;
+
+  const html = `<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8">
+    <title>Tani</title><link rel="stylesheet" href="/public/css/style.css"></head>
+    <body><main class="container">
+    <div class="breadcrumb"><a href="/">Ana Sayfa</a> / Yonetim / Tani</div>
+    <h1>🔧 Sistem Tani</h1>
+    <p class="muted">Veri klasorlerinin dogru ayarlanip ayarlanmadigini gosterir.</p>
+    <div class="table-wrap"><table class="table" style="width:100%">
+      <tr><th style="text-align:left;padding:8px 12px">Ayar</th><th style="text-align:left;padding:8px 12px">Deger</th><th style="padding:8px 12px">Durum</th></tr>
+      ${row('DATA_DIR (env degeri)', process.env.DATA_DIR || '(BOS - ayarlanmamis!)', !!process.env.DATA_DIR)}
+      ${row('Kullanilan kayit klasoru', db.DATA_DIR, dataCheck.writable)}
+      ${row('Kayit klasoru yazilabilir mi', dataCheck.writable ? 'Evet' : 'HAYIR: ' + (dataCheck.error || ''), dataCheck.writable)}
+      ${row('db.json mevcut mu', dbExists ? 'Evet' : 'Hayir (henuz olusmadi)', dbExists)}
+      ${row('UPLOADS_DIR (env degeri)', process.env.UPLOADS_DIR || '(BOS - ayarlanmamis!)', !!process.env.UPLOADS_DIR)}
+      ${row('Kullanilan dosya klasoru', UPLOAD_DIR, uploadCheck.writable)}
+      ${row('Dosya klasoru yazilabilir mi', uploadCheck.writable ? 'Evet' : 'HAYIR: ' + (uploadCheck.error || ''), uploadCheck.writable)}
+    </table></div>
+    <p style="margin-top:16px"><strong>Yorum:</strong> ${
+      process.env.DATA_DIR && dataCheck.writable && process.env.UPLOADS_DIR && uploadCheck.writable
+        ? '🎉 Her sey dogru! Veriler kalici klasorlerde, deploy-guvenli.'
+        : !process.env.DATA_DIR || !process.env.UPLOADS_DIR
+          ? '⚠️ Ortam degiskenleri okunmamis. Hostinger Node.js panelinde DATA_DIR / UPLOADS_DIR ekleyip uygulamayi RESTART edin.'
+          : '⚠️ Klasor yazilabilir degil. Yolu kontrol edin.'
+    }</p>
+    <p><a href="/" class="btn">← Ana Sayfa</a></p>
+    </main></body></html>`;
+  res.send(html);
+});
+
 // ---------- Kullanici yonetimi ----------
 app.get('/yonetim/kullanicilar', requireAuth, requireAdmin, (req, res) => {
   res.render('admin/users', { title: 'Kullanici Yonetimi', users: db.users.all() });

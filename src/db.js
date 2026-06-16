@@ -278,6 +278,8 @@ const documents = {
 };
 
 module.exports = {
+  DATA_DIR,
+  DB_FILE,
   load,
   save,
   seed,
