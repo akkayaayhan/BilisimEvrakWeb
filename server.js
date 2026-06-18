@@ -682,7 +682,7 @@ app.get('/plan-olustur', requireAuth, requireAdmin, (req, res) => {
 });
 
 app.post('/plan-olustur', requireAuth, requireAdmin, async (req, res) => {
-  const { curriculumId, schoolName, teacherName, term, className, principalName, saveArchive } = req.body;
+  const { curriculumId, province, district, school, term, className, principalName, saveArchive } = req.body;
   const cur = db.curricula.findById(curriculumId);
   if (!cur) {
     setFlash(req, 'error', 'Lutfen bir mufredat (ders) secin.');
@@ -693,9 +693,20 @@ app.post('/plan-olustur', requireAuth, requireAdmin, async (req, res) => {
     return res.redirect('/plan-olustur');
   }
   try {
-    const buf = await generatePlanBuffer({ curriculum: cur, schoolName, teacherName, term, className, principalName });
+    const buf = await generatePlanBuffer({
+      term, province, district, school,
+      area: cur.area,
+      gradeLevel: cur.gradeLevel,
+      courseName: cur.courseName || cur.name,
+      weeklyHours: cur.weeklyHours,
+      rows: cur.rows,
+      defaultMethods: cur.defaultMethods,
+      defaultTools: cur.defaultTools,
+      signTeachers: cur.signTeachers,
+      principalName: principalName || cur.principalName
+    });
     const safe = (s) => String(s || '').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40);
-    const niceName = `Yillik_Plan_${safe(cur.gradeLevel || cur.name)}_${safe(term)}.docx`;
+    const niceName = `Yillik_Plan_${safe(cur.courseName || cur.name)}_${safe(className)}_${safe(term)}.docx`;
     const storedName = crypto.randomUUID() + '.docx';
     const filePath = path.join(UPLOAD_DIR, storedName);
     fs.writeFileSync(filePath, buf);
@@ -735,12 +746,12 @@ app.get('/yonetim/mufredat', requireAuth, requireAdmin, (req, res) => {
 });
 
 app.post('/yonetim/mufredat', requireAuth, requireAdmin, (req, res) => {
-  const { name, gradeLevel, weeklyHours } = req.body;
+  const { name, area, gradeLevel, courseName, weeklyHours } = req.body;
   if (!name || !name.trim()) {
     setFlash(req, 'error', 'Mufredat adi gerekli.');
     return res.redirect('/yonetim/mufredat');
   }
-  const cur = db.curricula.create({ name, gradeLevel, weeklyHours });
+  const cur = db.curricula.create({ name, area, gradeLevel, courseName, weeklyHours });
   setFlash(req, 'success', 'Mufredat olusturuldu. Simdi konu/kazanim satirlarini ekleyin.');
   res.redirect('/yonetim/mufredat/' + cur.id);
 });
@@ -757,11 +768,17 @@ app.post('/yonetim/mufredat/:id', requireAuth, requireAdmin, (req, res) => {
     setFlash(req, 'error', 'Mufredat bulunamadi.');
     return res.redirect('/yonetim/mufredat');
   }
-  const { name, gradeLevel, weeklyHours } = req.body;
+  const { name, area, gradeLevel, courseName, weeklyHours, defaultMethods, defaultTools, signTeachers, principalName } = req.body;
   db.curricula.update(cur.id, {
     name: (name || cur.name).trim(),
+    area: (area || '').trim(),
     gradeLevel: (gradeLevel || '').trim(),
-    weeklyHours: parseInt(weeklyHours, 10) || 0
+    courseName: (courseName || '').trim(),
+    weeklyHours: parseInt(weeklyHours, 10) || 0,
+    defaultMethods: (defaultMethods || '').trim(),
+    defaultTools: (defaultTools || '').trim(),
+    signTeachers: String(signTeachers || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
+    principalName: (principalName || '').trim()
   });
   setFlash(req, 'success', 'Mufredat bilgileri kaydedildi.');
   res.redirect('/yonetim/mufredat/' + cur.id);
@@ -774,15 +791,19 @@ app.post('/yonetim/mufredat/:id/satirlar', requireAuth, requireAdmin, (req, res)
     return res.redirect('/yonetim/mufredat');
   }
   const arr = (x) => (x == null ? [] : Array.isArray(x) ? x : [x]);
-  const month = arr(req.body.month), week = arr(req.body.week), unit = arr(req.body.unit),
-    topic = arr(req.body.topic), objectives = arr(req.body.objectives), methods = arr(req.body.methods),
-    tools = arr(req.body.tools), assessment = arr(req.body.assessment);
+  const month = arr(req.body.month), week = arr(req.body.week), hours = arr(req.body.hours),
+    objectives = arr(req.body.objectives), topic = arr(req.body.topic), methods = arr(req.body.methods),
+    tools = arr(req.body.tools), notes = arr(req.body.notes), banner = arr(req.body.banner);
   const rows = [];
   for (let i = 0; i < month.length; i++) {
+    if ((banner[i] || '').trim()) {
+      rows.push({ banner: banner[i].trim() });
+      continue;
+    }
     const r = {
-      month: (month[i] || '').trim(), week: (week[i] || '').trim(), unit: (unit[i] || '').trim(),
-      topic: (topic[i] || '').trim(), objectives: (objectives[i] || '').trim(),
-      methods: (methods[i] || '').trim(), tools: (tools[i] || '').trim(), assessment: (assessment[i] || '').trim()
+      month: (month[i] || '').trim(), week: (week[i] || '').trim(), hours: (hours[i] || '').trim(),
+      objectives: (objectives[i] || '').trim(), topic: (topic[i] || '').trim(),
+      methods: (methods[i] || '').trim(), tools: (tools[i] || '').trim(), notes: (notes[i] || '').trim()
     };
     if (Object.values(r).some((v) => v)) rows.push(r);
   }

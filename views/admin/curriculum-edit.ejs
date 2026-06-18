@@ -5,20 +5,28 @@
 <div class="page-head">
   <div>
     <h1>📚 <%= cur.name %></h1>
-    <p class="muted">Ünite, konu ve kazanım satırlarını girin. Bu satırlar Word planına aktarılır.</p>
+    <p class="muted">Başlık bilgilerini ve konu/kazanım satırlarını düzenleyin.</p>
   </div>
   <a href="/plan-olustur" class="btn btn-primary">📄 Bu Dersten Plan Oluştur</a>
 </div>
 
 <div class="form-card">
-  <h2 class="section-title">Ders Bilgileri</h2>
+  <h2 class="section-title">Ders / Başlık Bilgileri</h2>
   <form action="/yonetim/mufredat/<%= cur.id %>" method="post" class="form">
     <div class="grid-2">
-      <label>Ders / Müfredat Adı<input type="text" name="name" value="<%= cur.name %>" required /></label>
-      <label>Sınıf Düzeyi<input type="text" name="gradeLevel" value="<%= cur.gradeLevel || '' %>" /></label>
+      <label>Müfredat Adı (liste için)<input type="text" name="name" value="<%= cur.name %>" required /></label>
+      <label>Alan<input type="text" name="area" value="<%= cur.area || '' %>" placeholder="Bilişim Teknolojileri Alanı" /></label>
+      <label>Sınıf Düzeyi<input type="text" name="gradeLevel" value="<%= cur.gradeLevel || '' %>" placeholder="11.SINIF" /></label>
+      <label>Ders Adı (başlıkta)<input type="text" name="courseName" value="<%= cur.courseName || '' %>" placeholder="Mobil Uygulamalar" /></label>
       <label>Haftalık Ders Saati<input type="number" name="weeklyHours" min="0" max="40" value="<%= cur.weeklyHours || '' %>" /></label>
+      <label>Okul Müdürü<input type="text" name="principalName" value="<%= cur.principalName || '' %>" /></label>
     </div>
-    <div class="form-actions"><button type="submit" class="btn">Bilgileri Kaydet</button></div>
+    <label>Öğretim Teknikleri (varsayılan)<textarea name="defaultMethods" rows="2"><%= cur.defaultMethods || '' %></textarea></label>
+    <label>Araç - Gereç (varsayılan)<textarea name="defaultTools" rows="2"><%= cur.defaultTools || '' %></textarea></label>
+    <label>İmza Bölümü Öğretmenleri <small class="muted">(her satıra bir isim)</small>
+      <textarea name="signTeachers" rows="3"><%= (cur.signTeachers||[]).join('\n') %></textarea>
+    </label>
+    <div class="form-actions"><button type="submit" class="btn">Başlık Bilgilerini Kaydet</button></div>
   </form>
 </div>
 
@@ -27,63 +35,81 @@
 <form action="/yonetim/mufredat/<%= cur.id %>/satirlar" method="post">
   <div id="rowsContainer">
     <% (cur.rows||[]).forEach(function(r){ %>
-      <div class="cur-row">
-        <div class="cur-row-head">
-          <span class="cur-row-title">📌 Satır</span>
-          <button type="button" class="btn btn-sm btn-danger cur-del">Sil</button>
+      <% if (r.banner) { %>
+        <div class="cur-row cur-banner">
+          <div class="cur-row-head"><span class="cur-row-title">🟦 Ara Tatil / Bant</span><button type="button" class="btn btn-sm btn-danger cur-del">Sil</button></div>
+          <input type="hidden" name="month" value="" /><input type="hidden" name="week" value="" /><input type="hidden" name="hours" value="" />
+          <input type="hidden" name="objectives" value="" /><input type="hidden" name="topic" value="" />
+          <input type="hidden" name="methods" value="" /><input type="hidden" name="tools" value="" /><input type="hidden" name="notes" value="" />
+          <label>Bant Metni<input name="banner" value="<%= r.banner %>" /></label>
         </div>
-        <div class="cur-grid-4">
-          <label>Ay<input name="month" value="<%= r.month || '' %>" /></label>
-          <label>Hafta<input name="week" value="<%= r.week || '' %>" /></label>
-          <label>Ünite / Tema<input name="unit" value="<%= r.unit || '' %>" /></label>
-          <label>Konu<input name="topic" value="<%= r.topic || '' %>" /></label>
+      <% } else { %>
+        <div class="cur-row">
+          <div class="cur-row-head"><span class="cur-row-title">📌 Hafta</span><button type="button" class="btn btn-sm btn-danger cur-del">Sil</button></div>
+          <input type="hidden" name="banner" value="" />
+          <div class="cur-grid-4">
+            <label>Ay<input name="month" value="<%= r.month || '' %>" /></label>
+            <label>Hafta<input name="week" value="<%= r.week || '' %>" /></label>
+            <label>Saat<input name="hours" value="<%= r.hours || '' %>" /></label>
+            <label>Açıklama<input name="notes" value="<%= r.notes || '' %>" /></label>
+          </div>
+          <label>Kazanım<textarea name="objectives" rows="2"><%= r.objectives || '' %></textarea></label>
+          <label>Konu<textarea name="topic" rows="3"><%= r.topic || '' %></textarea></label>
+          <div class="cur-grid-2">
+            <label>Öğretim Teknikleri <small class="muted">(boş=varsayılan)</small><input name="methods" value="<%= r.methods || '' %>" /></label>
+            <label>Araç-Gereç <small class="muted">(boş=varsayılan)</small><input name="tools" value="<%= r.tools || '' %>" /></label>
+          </div>
         </div>
-        <label>Kazanımlar<textarea name="objectives" rows="2"><%= r.objectives || '' %></textarea></label>
-        <div class="cur-grid-3">
-          <label>Yöntem ve Teknikler<input name="methods" value="<%= r.methods || '' %>" /></label>
-          <label>Araç - Gereç<input name="tools" value="<%= r.tools || '' %>" /></label>
-          <label>Ölçme - Değerlendirme<input name="assessment" value="<%= r.assessment || '' %>" /></label>
-        </div>
-      </div>
+      <% } %>
     <% }); %>
   </div>
 
-  <div class="form-actions" style="margin-top:16px">
-    <button type="button" id="addRow" class="btn">+ Satır Ekle</button>
+  <div class="form-actions" style="margin-top:16px; flex-wrap:wrap">
+    <button type="button" id="addRow" class="btn">+ Hafta Satırı Ekle</button>
+    <button type="button" id="addBanner" class="btn">+ Ara Tatil Bandı Ekle</button>
     <button type="submit" class="btn btn-primary">Tüm Satırları Kaydet</button>
   </div>
 </form>
 
 <template id="rowTemplate">
   <div class="cur-row">
-    <div class="cur-row-head">
-      <span class="cur-row-title">📌 Satır</span>
-      <button type="button" class="btn btn-sm btn-danger cur-del">Sil</button>
-    </div>
+    <div class="cur-row-head"><span class="cur-row-title">📌 Hafta</span><button type="button" class="btn btn-sm btn-danger cur-del">Sil</button></div>
+    <input type="hidden" name="banner" value="" />
     <div class="cur-grid-4">
       <label>Ay<input name="month" /></label>
       <label>Hafta<input name="week" /></label>
-      <label>Ünite / Tema<input name="unit" /></label>
-      <label>Konu<input name="topic" /></label>
+      <label>Saat<input name="hours" /></label>
+      <label>Açıklama<input name="notes" /></label>
     </div>
-    <label>Kazanımlar<textarea name="objectives" rows="2"></textarea></label>
-    <div class="cur-grid-3">
-      <label>Yöntem ve Teknikler<input name="methods" /></label>
-      <label>Araç - Gereç<input name="tools" /></label>
-      <label>Ölçme - Değerlendirme<input name="assessment" /></label>
+    <label>Kazanım<textarea name="objectives" rows="2"></textarea></label>
+    <label>Konu<textarea name="topic" rows="3"></textarea></label>
+    <div class="cur-grid-2">
+      <label>Öğretim Teknikleri <small class="muted">(boş=varsayılan)</small><input name="methods" /></label>
+      <label>Araç-Gereç <small class="muted">(boş=varsayılan)</small><input name="tools" /></label>
     </div>
+  </div>
+</template>
+
+<template id="bannerTemplate">
+  <div class="cur-row cur-banner">
+    <div class="cur-row-head"><span class="cur-row-title">🟦 Ara Tatil / Bant</span><button type="button" class="btn btn-sm btn-danger cur-del">Sil</button></div>
+    <input type="hidden" name="month" value="" /><input type="hidden" name="week" value="" /><input type="hidden" name="hours" value="" />
+    <input type="hidden" name="objectives" value="" /><input type="hidden" name="topic" value="" />
+    <input type="hidden" name="methods" value="" /><input type="hidden" name="tools" value="" /><input type="hidden" name="notes" value="" />
+    <label>Bant Metni<input name="banner" placeholder="ARA TATİL (10-14 KASIM)" /></label>
   </div>
 </template>
 
 <script>
   (function () {
     var container = document.getElementById('rowsContainer');
-    var tpl = document.getElementById('rowTemplate');
-    document.getElementById('addRow').addEventListener('click', function () {
-      var node = tpl.content.cloneNode(true);
-      container.appendChild(node);
+    function add(tplId) {
+      var tpl = document.getElementById(tplId);
+      container.appendChild(tpl.content.cloneNode(true));
       container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+    }
+    document.getElementById('addRow').addEventListener('click', function () { add('rowTemplate'); });
+    document.getElementById('addBanner').addEventListener('click', function () { add('bannerTemplate'); });
     container.addEventListener('click', function (e) {
       var btn = e.target.closest('.cur-del');
       if (btn) btn.closest('.cur-row').remove();

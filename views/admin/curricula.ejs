@@ -13,9 +13,11 @@
   <h2 class="section-title">Yeni Müfredat (Ders) Ekle</h2>
   <form action="/yonetim/mufredat" method="post" class="form">
     <div class="grid-2">
-      <label>Ders / Müfredat Adı<input type="text" name="name" placeholder="10. Sınıf Bilişim Teknolojileri ve Yazılım" required /></label>
-      <label>Sınıf Düzeyi<input type="text" name="gradeLevel" placeholder="10. Sınıf" /></label>
-      <label>Haftalık Ders Saati<input type="number" name="weeklyHours" min="0" max="40" placeholder="2" /></label>
+      <label>Müfredat Adı (liste için)<input type="text" name="name" placeholder="11. Sınıf Mobil Uygulamalar" required /></label>
+      <label>Alan<input type="text" name="area" placeholder="Bilişim Teknolojileri Alanı" /></label>
+      <label>Sınıf Düzeyi<input type="text" name="gradeLevel" placeholder="11.SINIF" /></label>
+      <label>Ders Adı (başlıkta)<input type="text" name="courseName" placeholder="Mobil Uygulamalar" /></label>
+      <label>Haftalık Ders Saati<input type="number" name="weeklyHours" min="0" max="40" placeholder="5" /></label>
     </div>
     <div class="form-actions"><button type="submit" class="btn btn-primary">Oluştur ve Düzenle</button></div>
   </form>

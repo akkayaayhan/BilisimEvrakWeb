@@ -677,6 +677,10 @@ a:hover { text-decoration: underline; }
 .cur-row-title { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
 .cur-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
 .cur-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.cur-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.cur-row label { margin-top: 8px; }
+.cur-banner { background: #eef2ff; border-color: #c7d2fe; }
+.cur-banner .cur-row-title { color: var(--primary-dark); }
 .cur-row label { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; font-weight: 500; color: var(--muted); }
 .cur-row input, .cur-row textarea {
   border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; font: inherit; font-weight: 400; color: var(--text); outline: none;

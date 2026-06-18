@@ -44,6 +44,9 @@ let db = {
 // Varsayilan ogretim donemleri (ilk acilista olusturulur, sonra panelden yonetilir)
 const DEFAULT_TERMS = ['2025-2026', '2026-2027'];
 
+// Hazir mufredat (yillik plan icerigi)
+const MOBIL_CURRICULUM = require('./seed-mobil');
+
 /** "Yillik Planlar" -> "yillik-planlar" */
 function slugify(text) {
   const map = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u', İ: 'i' };
@@ -122,28 +125,29 @@ function seed(hashPassword) {
     console.log('[db] Varsayilan ogretim donemleri olusturuldu.');
   }
 
-  if (db.curricula.length === 0) {
+  // Eski otomatik "ORNEK" mufredati varsa temizle
+  const beforeLen = db.curricula.length;
+  db.curricula = db.curricula.filter((c) => !(c.name || '').startsWith('ÖRNEK - 10. Sınıf'));
+  if (db.curricula.length !== beforeLen) changed = true;
+
+  // Hazir Mobil Uygulamalar mufredatini ekle (yoksa)
+  if (!db.curricula.some((c) => c.name === MOBIL_CURRICULUM.name)) {
     db.curricula.push({
       id: newId(),
-      name: 'ÖRNEK - 10. Sınıf Bilişim Teknolojileri ve Yazılım',
-      gradeLevel: '10. Sınıf',
-      weeklyHours: 2,
-      rows: [
-        {
-          month: 'Eylül', week: '1', unit: 'İletişim, Bilişim ve İnternet',
-          topic: 'Bilişim teknolojileri kavramları', objectives: 'Bilişim teknolojileri kavramlarını açıklar.',
-          methods: 'Anlatım, Soru-Cevap', tools: 'Bilgisayar, Projeksiyon', assessment: 'Gözlem'
-        },
-        {
-          month: 'Eylül', week: '2', unit: 'İletişim, Bilişim ve İnternet',
-          topic: 'İnternet ve güvenli kullanım', objectives: 'İnterneti güvenli ve bilinçli kullanır.',
-          methods: 'Anlatım, Uygulama', tools: 'Bilgisayar', assessment: 'Uygulama'
-        }
-      ],
+      name: MOBIL_CURRICULUM.name,
+      area: MOBIL_CURRICULUM.area,
+      gradeLevel: MOBIL_CURRICULUM.gradeLevel,
+      courseName: MOBIL_CURRICULUM.courseName,
+      weeklyHours: MOBIL_CURRICULUM.weeklyHours,
+      defaultMethods: MOBIL_CURRICULUM.defaultMethods,
+      defaultTools: MOBIL_CURRICULUM.defaultTools,
+      signTeachers: MOBIL_CURRICULUM.signTeachers,
+      principalName: MOBIL_CURRICULUM.principalName,
+      rows: MOBIL_CURRICULUM.rows,
       createdAt: new Date().toISOString()
     });
     changed = true;
-    console.log('[db] Ornek mufredat (plan sablonu) olusturuldu.');
+    console.log('[db] Mobil Uygulamalar mufredati yuklendi.');
   }
 
   if (db.users.length === 0) {
@@ -300,13 +304,19 @@ const terms = {
 const curricula = {
   all: () => db.curricula.slice().sort((a, b) => a.name.localeCompare(b.name, 'tr')),
   findById: (id) => db.curricula.find((c) => c.id === id),
-  create: ({ name, gradeLevel, weeklyHours }) => {
+  create: (data) => {
     const cur = {
       id: newId(),
-      name: name.trim(),
-      gradeLevel: (gradeLevel || '').trim(),
-      weeklyHours: parseInt(weeklyHours, 10) || 0,
-      rows: [],
+      name: (data.name || '').trim(),
+      area: (data.area || '').trim(),
+      gradeLevel: (data.gradeLevel || '').trim(),
+      courseName: (data.courseName || '').trim(),
+      weeklyHours: parseInt(data.weeklyHours, 10) || 0,
+      defaultMethods: data.defaultMethods || '',
+      defaultTools: data.defaultTools || '',
+      signTeachers: Array.isArray(data.signTeachers) ? data.signTeachers : [],
+      principalName: data.principalName || '',
+      rows: Array.isArray(data.rows) ? data.rows : [],
       createdAt: new Date().toISOString()
     };
     db.curricula.push(cur);

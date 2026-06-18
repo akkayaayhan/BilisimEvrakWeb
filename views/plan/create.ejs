@@ -5,14 +5,14 @@
 <div class="page-head">
   <div>
     <h1>📝 Yıllık Plan Oluştur</h1>
-    <p class="muted">Dersi seçin, bilgileri girin; sistem Word (.docx) yıllık planı üretsin.</p>
+    <p class="muted">Dersi seçin, okul bilgilerini girin; sistem Word (.docx) yıllık planı üretsin.</p>
   </div>
 </div>
 
 <div class="form-card" style="max-width:680px">
   <% if (curricula.length === 0) { %>
     <div class="empty-state">
-      <p>Henüz tanımlı bir ders müfredatı yok. Plan üretebilmek için önce müfredat (üniteler/kazanımlar) eklemelisiniz.</p>
+      <p>Henüz tanımlı bir ders müfredatı yok. Önce müfredat ekleyin.</p>
       <a href="/yonetim/mufredat" class="btn btn-primary">Müfredat Ekle</a>
     </div>
   <% } else { %>
@@ -22,22 +22,21 @@
         <select name="curriculumId" required>
           <option value="">— Ders seçin —</option>
           <% curricula.forEach(function(c){ %>
-            <option value="<%= c.id %>"><%= c.name %><%= c.rows && c.rows.length ? ' (' + c.rows.length + ' satır)' : ' (boş!)' %></option>
+            <option value="<%= c.id %>"><%= c.name %> (<%= (c.rows||[]).length %> satır)</option>
           <% }); %>
         </select>
       </label>
 
       <div class="grid-2">
-        <label>Okul Adı<input type="text" name="schoolName" placeholder="... Mesleki ve Teknik Anadolu Lisesi" required /></label>
         <label>Öğretim Yılı
-          <input type="text" name="term" list="termList" value="<%= terms[0] ? terms[0].name : '' %>" required />
-          <datalist id="termList">
-            <% terms.forEach(function(t){ %><option value="<%= t.name %>"></option><% }); %>
-          </datalist>
+          <input type="text" name="term" list="termList" value="<%= terms[0] ? terms[0].name : '2025-2026' %>" required />
+          <datalist id="termList"><% terms.forEach(function(t){ %><option value="<%= t.name %>"></option><% }); %></datalist>
         </label>
-        <label>Sınıf / Şube<input type="text" name="className" placeholder="10-A" /></label>
-        <label>Öğretmen<input type="text" name="teacherName" value="<%= currentUser.fullName || currentUser.username %>" required /></label>
-        <label>Okul Müdürü<input type="text" name="principalName" placeholder="(istege bagli)" /></label>
+        <label>İl<input type="text" name="province" placeholder="ŞANLIURFA" /></label>
+        <label>İlçe<input type="text" name="district" placeholder="KARAKÖPRÜ" /></label>
+        <label>Okul Adı<input type="text" name="school" placeholder="... Mesleki ve Teknik Anadolu Lisesi" required /></label>
+        <label>Sınıf / Şube <small class="muted">(dosya adı için)</small><input type="text" name="className" placeholder="11-A" /></label>
+        <label>Okul Müdürü<input type="text" name="principalName" placeholder="(boş bırakılırsa müfredattaki kullanılır)" /></label>
       </div>
 
       <label class="checkbox-row">
