@@ -1,0 +1,42 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / <a href="/yonetim/zumreler">Zümre Şablonları</a> / Düzenle</div>
+
+<div class="page-head">
+  <div><h1>👥 <%= z.name %></h1><p class="muted">İçeriği düzenleyin. Toplantı no/tarih/yıl üretim sırasında formdan gelir.</p></div>
+  <a href="/zumre-olustur" class="btn btn-primary">📄 Bu Şablondan Tutanak Oluştur</a>
+</div>
+
+<form action="/yonetim/zumreler/<%= z.id %>" method="post" class="form-card form" style="max-width:none">
+  <div class="grid-2">
+    <label>Şablon Adı<input type="text" name="name" value="<%= z.name %>" required /></label>
+    <label>Başlıkta Görünecek<input type="text" name="meetingTitle" value="<%= z.meetingTitle || '' %>" /></label>
+    <label>Alan<input type="text" name="area" value="<%= z.area || '' %>" /></label>
+    <label>Okul Müdürü<input type="text" name="principalName" value="<%= z.principalName || '' %>" /></label>
+    <label>Müdür Unvanı<input type="text" name="principalTitle" value="<%= z.principalTitle || 'Okul Müdürü' %>" /></label>
+  </div>
+
+  <label>Toplantıya Katılanlar <small class="muted">(her satıra bir kişi: Ad - Görev)</small>
+    <textarea name="attendees" rows="6"><%= (z.attendees||[]).join('\n') %></textarea>
+  </label>
+
+  <label>Gündem Maddeleri <small class="muted">(her satıra bir madde)</small>
+    <textarea name="agenda" rows="10"><%= (z.agenda||[]).join('\n') %></textarea>
+  </label>
+
+  <label>Gündem Maddelerinin Görüşülmesi <small class="muted">(her madde arasına BİR BOŞ SATIR bırakın; madde içinde satır atlayabilirsiniz)</small>
+    <textarea name="discussions" rows="20"><%= (z.discussions||[]).join('\n\n') %></textarea>
+  </label>
+
+  <label>Alınan Kararlar <small class="muted">(her satıra bir karar)</small>
+    <textarea name="decisions" rows="8"><%= (z.decisions||[]).join('\n') %></textarea>
+  </label>
+
+  <label>İmza Bölümü Öğretmenleri <small class="muted">(her satıra: Ad | Görev)</small>
+    <textarea name="signers" rows="6"><%= (z.signers||[]).map(function(s){ return s.name + ' | ' + (s.role||''); }).join('\n') %></textarea>
+  </label>
+
+  <div class="form-actions"><button type="submit" class="btn btn-primary">Kaydet</button></div>
+</form>
+
+<%- include('../partials/footer') %>

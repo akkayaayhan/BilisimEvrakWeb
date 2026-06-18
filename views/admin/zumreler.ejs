@@ -1,0 +1,47 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Yönetim / Zümre Şablonları</div>
+
+<div class="page-head">
+  <div>
+    <h1>👥 Zümre Şablonları</h1>
+    <p class="muted">Her zümre türü için içeriği bir kez tanımlayın; tutanağı tek tıkla üretin.</p>
+  </div>
+</div>
+
+<div class="form-card">
+  <h2 class="section-title">Yeni Zümre Şablonu Ekle</h2>
+  <form action="/yonetim/zumreler" method="post" class="form">
+    <div class="grid-2">
+      <label>Şablon Adı<input type="text" name="name" placeholder="Sene Başı Zümre Toplantısı" required /></label>
+      <label>Başlıkta Görünecek<input type="text" name="meetingTitle" placeholder="SENE BAŞI ZÜMRE TOPLANTISI" /></label>
+      <label>Alan<input type="text" name="area" placeholder="Bilişim Teknolojileri Alanı" /></label>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary">Oluştur ve Düzenle</button></div>
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Şablon</th><th>Gündem</th><th>Görüşme</th><th>Karar</th><th></th></tr></thead>
+    <tbody>
+      <% zumreler.forEach(function(z){ %>
+        <tr>
+          <td><strong><%= z.name %></strong></td>
+          <td><span class="badge"><%= (z.agenda||[]).length %></span></td>
+          <td><span class="badge"><%= (z.discussions||[]).length %></span></td>
+          <td><span class="badge"><%= (z.decisions||[]).length %></span></td>
+          <td class="cell-actions">
+            <a href="/yonetim/zumreler/<%= z.id %>" class="btn btn-sm">Düzenle</a>
+            <form action="/yonetim/zumreler/<%= z.id %>/sil" method="post" class="js-confirm" style="display:inline" data-confirm="'<%= z.name %>' şablonunu silmek istiyor musunuz?">
+              <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+            </form>
+          </td>
+        </tr>
+      <% }); %>
+      <% if (zumreler.length === 0) { %><tr><td colspan="5" class="muted">Henüz şablon yok.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

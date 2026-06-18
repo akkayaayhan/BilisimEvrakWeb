@@ -1,0 +1,57 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Zümre Tutanağı Oluştur</div>
+
+<div class="page-head">
+  <div>
+    <h1>👥 Zümre Tutanağı Oluştur</h1>
+    <p class="muted">Şablonu seçin, toplantı bilgilerini girin; sistem Word zümre tutanağı üretsin.</p>
+  </div>
+</div>
+
+<div class="form-card" style="max-width:680px">
+  <% if (zumreler.length === 0) { %>
+    <div class="empty-state">
+      <p>Henüz zümre şablonu yok. Önce bir şablon ekleyin.</p>
+      <a href="/yonetim/zumreler" class="btn btn-primary">Zümre Şablonu Ekle</a>
+    </div>
+  <% } else { %>
+    <form action="/zumre-olustur" method="post" class="form">
+      <label>
+        Zümre Şablonu
+        <select name="zumreId" required>
+          <option value="">— Şablon seçin —</option>
+          <% zumreler.forEach(function(z){ %>
+            <option value="<%= z.id %>"><%= z.name %></option>
+          <% }); %>
+        </select>
+      </label>
+
+      <div class="grid-2">
+        <label>Öğretim Yılı
+          <input type="text" name="term" list="termList" value="<%= terms[0] ? terms[0].name : '2025-2026' %>" required />
+          <datalist id="termList"><% terms.forEach(function(t){ %><option value="<%= t.name %>"></option><% }); %></datalist>
+        </label>
+        <label>Okul Adı<input type="text" name="school" placeholder="KARAKÖPRÜ GAP MESLEKİ VE TEKNİK ANADOLU LİSESİ" required /></label>
+        <label>Alan<input type="text" name="area" placeholder="(boş = şablondaki)" /></label>
+        <label>Toplantı No<input type="text" name="meetingNo" placeholder="1" /></label>
+        <label>Toplantı Tarihi<input type="text" name="date" placeholder="03/09/2026" /></label>
+        <label>Toplantı Saati<input type="text" name="time" placeholder="11:00" /></label>
+        <label>Toplantı Yeri<input type="text" name="place" placeholder="Bilişim Teknolojileri Bölümü Öğretmenler Odası" /></label>
+        <label>Okul Müdürü<input type="text" name="principalName" placeholder="(boş = şablondaki)" /></label>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" name="saveArchive" value="1" checked />
+        Oluşan tutanağı <strong>Zümreler</strong> arşivine de kaydet
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">📄 Word Olarak Oluştur</button>
+        <a href="/yonetim/zumreler" class="btn btn-ghost">Şablonları Düzenle</a>
+      </div>
+    </form>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

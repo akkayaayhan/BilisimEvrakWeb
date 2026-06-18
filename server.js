@@ -14,6 +14,7 @@ const { hashPassword, verifyPassword, requireAuth, requireAdmin } = require('./s
 const { upload, UPLOAD_DIR } = require('./src/upload');
 const { generatePlanBuffer } = require('./src/plangen');
 const { CALENDARS, adaptRows } = require('./src/calendar');
+const { generateZumreBuffer } = require('./src/zumregen');
 
 // -------------------- Baslangic --------------------
 db.load();
@@ -825,6 +826,116 @@ app.post('/yonetim/mufredat/:id/sil', requireAuth, requireAdmin, (req, res) => {
   db.curricula.remove(cur.id);
   setFlash(req, 'success', 'Mufredat silindi.');
   res.redirect('/yonetim/mufredat');
+});
+
+// ==================== ZÜMRE TUTANAĞI OLUŞTURUCU ====================
+app.get('/zumre-olustur', requireAuth, requireAdmin, (req, res) => {
+  res.render('zumre/create', { title: 'Zümre Tutanağı Oluştur', zumreler: db.zumreler.all(), terms: db.terms.all() });
+});
+
+app.post('/zumre-olustur', requireAuth, requireAdmin, async (req, res) => {
+  const { zumreId, term, school, area, meetingNo, date, time, place, principalName, saveArchive } = req.body;
+  const z = db.zumreler.findById(zumreId);
+  if (!z) {
+    setFlash(req, 'error', 'Lutfen bir zümre şablonu secin.');
+    return res.redirect('/zumre-olustur');
+  }
+  try {
+    const buf = await generateZumreBuffer({
+      term, school, area: area || z.area, meetingTitle: z.meetingTitle,
+      meetingNo, date, time, place,
+      attendees: z.attendees, agenda: z.agenda, discussions: z.discussions, decisions: z.decisions,
+      signers: z.signers, principalName: principalName || z.principalName, principalTitle: z.principalTitle
+    });
+    const safe = (s) => String(s || '').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40);
+    const niceName = `Zumre_${safe(z.name)}_${safe(term)}.docx`;
+    const storedName = crypto.randomUUID() + '.docx';
+    const filePath = path.join(UPLOAD_DIR, storedName);
+    fs.writeFileSync(filePath, buf);
+    if (saveArchive) {
+      const category =
+        db.categories.all().find((c) => c.slug === 'zumreler') ||
+        db.categories.all().find((c) => /z[üu]mre/i.test(c.name));
+      if (category) {
+        const t = db.terms.findByName(term);
+        db.documents.create({
+          title: z.name + (term ? ' (' + term + ')' : ''),
+          description: 'Sistemden otomatik olusturulan zümre tutanağı.',
+          categoryId: category.id, termId: t ? t.id : null,
+          storedName, originalName: niceName, size: buf.length,
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          uploadedBy: req.session.user.id, uploadedByName: req.session.user.fullName || req.session.user.username
+        });
+      }
+      return res.download(filePath, niceName);
+    }
+    return res.download(filePath, niceName, () => fs.unlink(filePath, () => {}));
+  } catch (e) {
+    console.error('[zumre] uretim hatasi', e);
+    setFlash(req, 'error', 'Zümre olusturulamadi: ' + e.message);
+    return res.redirect('/zumre-olustur');
+  }
+});
+
+// ---------- Zümre şablonu yonetimi ----------
+app.get('/yonetim/zumreler', requireAuth, requireAdmin, (req, res) => {
+  res.render('admin/zumreler', { title: 'Zümre Şablonları', zumreler: db.zumreler.all() });
+});
+
+app.post('/yonetim/zumreler', requireAuth, requireAdmin, (req, res) => {
+  const { name, meetingTitle, area } = req.body;
+  if (!name || !name.trim()) {
+    setFlash(req, 'error', 'Şablon adi gerekli.');
+    return res.redirect('/yonetim/zumreler');
+  }
+  const z = db.zumreler.create({ name: name.trim(), meetingTitle: (meetingTitle || '').trim(), area: (area || 'Bilişim Teknolojileri Alanı').trim() });
+  setFlash(req, 'success', 'Zümre şablonu olusturuldu. Simdi icerigini doldurun.');
+  res.redirect('/yonetim/zumreler/' + z.id);
+});
+
+app.get('/yonetim/zumreler/:id', requireAuth, requireAdmin, (req, res) => {
+  const z = db.zumreler.findById(req.params.id);
+  if (!z) return res.status(404).render('error', { title: 'Bulunamadi', message: 'Zümre şablonu bulunamadi.' });
+  res.render('admin/zumre-edit', { title: 'Zümre Şablonu Düzenle', z });
+});
+
+app.post('/yonetim/zumreler/:id', requireAuth, requireAdmin, (req, res) => {
+  const z = db.zumreler.findById(req.params.id);
+  if (!z) {
+    setFlash(req, 'error', 'Zümre şablonu bulunamadi.');
+    return res.redirect('/yonetim/zumreler');
+  }
+  const lines = (s) => String(s || '').split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+  const blocks = (s) => String(s || '').split(/\r?\n\s*\r?\n/).map((x) => x.replace(/\s+$/g, '').trim()).filter(Boolean);
+  const signers = lines(req.body.signers).map((l) => {
+    const i = l.indexOf('|');
+    return i >= 0 ? { name: l.slice(0, i).trim(), role: l.slice(i + 1).trim() } : { name: l, role: '' };
+  });
+  db.zumreler.update(z.id, {
+    name: (req.body.name || z.name).trim(),
+    meetingTitle: (req.body.meetingTitle || '').trim(),
+    area: (req.body.area || '').trim(),
+    principalName: (req.body.principalName || '').trim(),
+    principalTitle: (req.body.principalTitle || 'Okul Müdürü').trim(),
+    attendees: lines(req.body.attendees),
+    agenda: lines(req.body.agenda),
+    discussions: blocks(req.body.discussions),
+    decisions: lines(req.body.decisions),
+    signers
+  });
+  setFlash(req, 'success', 'Zümre şablonu kaydedildi.');
+  res.redirect('/yonetim/zumreler/' + z.id);
+});
+
+app.post('/yonetim/zumreler/:id/sil', requireAuth, requireAdmin, (req, res) => {
+  const z = db.zumreler.findById(req.params.id);
+  if (!z) {
+    setFlash(req, 'error', 'Zümre şablonu bulunamadi.');
+    return res.redirect('/yonetim/zumreler');
+  }
+  db.zumreler.remove(z.id);
+  setFlash(req, 'success', 'Zümre şablonu silindi.');
+  res.redirect('/yonetim/zumreler');
 });
 
 // ---------- Kullanici yonetimi ----------

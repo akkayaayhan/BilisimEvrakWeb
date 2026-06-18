@@ -38,6 +38,7 @@ let db = {
   subcategories: [],
   terms: [],
   curricula: [],
+  zumreler: [],
   documents: []
 };
 
@@ -47,6 +48,7 @@ const DEFAULT_TERMS = ['2025-2026', '2026-2027'];
 // Hazir mufredat (yillik plan icerigi)
 const MOBIL_CURRICULUM = require('./seed-mobil');
 const SEED_COURSES = require('./seed-courses');
+const SEED_ZUMRELER = require('./seed-zumreler');
 
 /** "Yillik Planlar" -> "yillik-planlar" */
 function slugify(text) {
@@ -82,6 +84,7 @@ function load() {
       db.subcategories = db.subcategories || [];
       db.terms = db.terms || [];
       db.curricula = db.curricula || [];
+      db.zumreler = db.zumreler || [];
       db.documents = db.documents || [];
     } catch (err) {
       console.error('[db] db.json okunamadi, bos veritabani ile baslaniyor:', err.message);
@@ -157,6 +160,15 @@ function seed(hashPassword) {
       db.curricula.push(Object.assign({ id: newId(), createdAt: new Date().toISOString() }, course));
       changed = true;
       console.log('[db] Mufredat yuklendi: ' + course.name);
+    }
+  });
+
+  // Hazir zümre şablonları (eksik olanlari ekle)
+  SEED_ZUMRELER.forEach((z) => {
+    if (!db.zumreler.some((x) => x.name === z.name)) {
+      db.zumreler.push(Object.assign({ id: newId(), createdAt: new Date().toISOString() }, z));
+      changed = true;
+      console.log('[db] Zümre şablonu yuklendi: ' + z.name);
     }
   });
 
@@ -347,6 +359,46 @@ const curricula = {
   }
 };
 
+// ---------------------- Zümre Şablonları ----------------------
+const zumreler = {
+  all: () => db.zumreler.slice().sort((a, b) => a.name.localeCompare(b.name, 'tr')),
+  findById: (id) => db.zumreler.find((z) => z.id === id),
+  create: (data) => {
+    const z = Object.assign(
+      {
+        id: newId(),
+        name: (data.name || '').trim(),
+        meetingTitle: (data.meetingTitle || '').trim(),
+        area: (data.area || '').trim(),
+        attendees: [],
+        signers: [],
+        agenda: [],
+        discussions: [],
+        decisions: [],
+        principalName: '',
+        principalTitle: 'Okul Müdürü',
+        createdAt: new Date().toISOString()
+      },
+      data
+    );
+    db.zumreler.push(z);
+    save();
+    return z;
+  },
+  update: (id, patch) => {
+    const z = db.zumreler.find((x) => x.id === id);
+    if (!z) return null;
+    Object.assign(z, patch);
+    save();
+    return z;
+  },
+  remove: (id) => {
+    const before = db.zumreler.length;
+    db.zumreler = db.zumreler.filter((z) => z.id !== id);
+    if (db.zumreler.length !== before) save();
+  }
+};
+
 // ---------------------- Evraklar (Dokumanlar) ----------------------
 const documents = {
   all: () => db.documents.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
@@ -419,5 +471,6 @@ module.exports = {
   subcategories,
   terms,
   curricula,
+  zumreler,
   documents
 };
