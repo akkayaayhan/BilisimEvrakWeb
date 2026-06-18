@@ -1,0 +1,47 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / Yönetim / Müfredat</div>
+
+<div class="page-head">
+  <div>
+    <h1>📚 Müfredat (Plan Şablonu) Yönetimi</h1>
+    <p class="muted">Her ders için üniteleri/kazanımları bir kez tanımlayın; yıllık planı tek tıkla üretin.</p>
+  </div>
+</div>
+
+<div class="form-card">
+  <h2 class="section-title">Yeni Müfredat (Ders) Ekle</h2>
+  <form action="/yonetim/mufredat" method="post" class="form">
+    <div class="grid-2">
+      <label>Ders / Müfredat Adı<input type="text" name="name" placeholder="10. Sınıf Bilişim Teknolojileri ve Yazılım" required /></label>
+      <label>Sınıf Düzeyi<input type="text" name="gradeLevel" placeholder="10. Sınıf" /></label>
+      <label>Haftalık Ders Saati<input type="number" name="weeklyHours" min="0" max="40" placeholder="2" /></label>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary">Oluştur ve Düzenle</button></div>
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Ders / Müfredat</th><th>Sınıf</th><th>Saat</th><th>Satır</th><th></th></tr></thead>
+    <tbody>
+      <% curricula.forEach(function(c){ %>
+        <tr>
+          <td><strong><%= c.name %></strong></td>
+          <td class="muted"><%= c.gradeLevel || '—' %></td>
+          <td class="muted"><%= c.weeklyHours || '—' %></td>
+          <td><span class="badge"><%= (c.rows||[]).length %></span></td>
+          <td class="cell-actions">
+            <a href="/yonetim/mufredat/<%= c.id %>" class="btn btn-sm">Düzenle</a>
+            <form action="/yonetim/mufredat/<%= c.id %>/sil" method="post" class="js-confirm" style="display:inline" data-confirm="'<%= c.name %>' müfredatını silmek istiyor musunuz?">
+              <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+            </form>
+          </td>
+        </tr>
+      <% }); %>
+      <% if (curricula.length === 0) { %><tr><td colspan="5" class="muted">Henüz müfredat yok.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

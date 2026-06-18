@@ -1,0 +1,94 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">Ana Sayfa</a> / <a href="/yonetim/mufredat">Müfredat</a> / Düzenle</div>
+
+<div class="page-head">
+  <div>
+    <h1>📚 <%= cur.name %></h1>
+    <p class="muted">Ünite, konu ve kazanım satırlarını girin. Bu satırlar Word planına aktarılır.</p>
+  </div>
+  <a href="/plan-olustur" class="btn btn-primary">📄 Bu Dersten Plan Oluştur</a>
+</div>
+
+<div class="form-card">
+  <h2 class="section-title">Ders Bilgileri</h2>
+  <form action="/yonetim/mufredat/<%= cur.id %>" method="post" class="form">
+    <div class="grid-2">
+      <label>Ders / Müfredat Adı<input type="text" name="name" value="<%= cur.name %>" required /></label>
+      <label>Sınıf Düzeyi<input type="text" name="gradeLevel" value="<%= cur.gradeLevel || '' %>" /></label>
+      <label>Haftalık Ders Saati<input type="number" name="weeklyHours" min="0" max="40" value="<%= cur.weeklyHours || '' %>" /></label>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn">Bilgileri Kaydet</button></div>
+  </form>
+</div>
+
+<h2 class="section-title">Konu / Kazanım Satırları (<%= (cur.rows||[]).length %>)</h2>
+
+<form action="/yonetim/mufredat/<%= cur.id %>/satirlar" method="post">
+  <div id="rowsContainer">
+    <% (cur.rows||[]).forEach(function(r){ %>
+      <div class="cur-row">
+        <div class="cur-row-head">
+          <span class="cur-row-title">📌 Satır</span>
+          <button type="button" class="btn btn-sm btn-danger cur-del">Sil</button>
+        </div>
+        <div class="cur-grid-4">
+          <label>Ay<input name="month" value="<%= r.month || '' %>" /></label>
+          <label>Hafta<input name="week" value="<%= r.week || '' %>" /></label>
+          <label>Ünite / Tema<input name="unit" value="<%= r.unit || '' %>" /></label>
+          <label>Konu<input name="topic" value="<%= r.topic || '' %>" /></label>
+        </div>
+        <label>Kazanımlar<textarea name="objectives" rows="2"><%= r.objectives || '' %></textarea></label>
+        <div class="cur-grid-3">
+          <label>Yöntem ve Teknikler<input name="methods" value="<%= r.methods || '' %>" /></label>
+          <label>Araç - Gereç<input name="tools" value="<%= r.tools || '' %>" /></label>
+          <label>Ölçme - Değerlendirme<input name="assessment" value="<%= r.assessment || '' %>" /></label>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <div class="form-actions" style="margin-top:16px">
+    <button type="button" id="addRow" class="btn">+ Satır Ekle</button>
+    <button type="submit" class="btn btn-primary">Tüm Satırları Kaydet</button>
+  </div>
+</form>
+
+<template id="rowTemplate">
+  <div class="cur-row">
+    <div class="cur-row-head">
+      <span class="cur-row-title">📌 Satır</span>
+      <button type="button" class="btn btn-sm btn-danger cur-del">Sil</button>
+    </div>
+    <div class="cur-grid-4">
+      <label>Ay<input name="month" /></label>
+      <label>Hafta<input name="week" /></label>
+      <label>Ünite / Tema<input name="unit" /></label>
+      <label>Konu<input name="topic" /></label>
+    </div>
+    <label>Kazanımlar<textarea name="objectives" rows="2"></textarea></label>
+    <div class="cur-grid-3">
+      <label>Yöntem ve Teknikler<input name="methods" /></label>
+      <label>Araç - Gereç<input name="tools" /></label>
+      <label>Ölçme - Değerlendirme<input name="assessment" /></label>
+    </div>
+  </div>
+</template>
+
+<script>
+  (function () {
+    var container = document.getElementById('rowsContainer');
+    var tpl = document.getElementById('rowTemplate');
+    document.getElementById('addRow').addEventListener('click', function () {
+      var node = tpl.content.cloneNode(true);
+      container.appendChild(node);
+      container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    container.addEventListener('click', function (e) {
+      var btn = e.target.closest('.cur-del');
+      if (btn) btn.closest('.cur-row').remove();
+    });
+  })();
+</script>
+
+<%- include('../partials/footer') %>

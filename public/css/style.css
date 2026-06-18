@@ -661,6 +661,31 @@ a:hover { text-decoration: underline; }
 .form-actions { display: flex; gap: 10px; margin-top: 4px; }
 .form-inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.checkbox-row { flex-direction: row !important; align-items: center; gap: 10px; font-weight: 400 !important; }
+.checkbox-row input { width: auto; }
+
+/* Mufredat satir editoru */
+.cur-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.cur-row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cur-row-title { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+.cur-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+.cur-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.cur-row label { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; font-weight: 500; color: var(--muted); }
+.cur-row input, .cur-row textarea {
+  border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; font: inherit; font-weight: 400; color: var(--text); outline: none;
+}
+.cur-row input:focus, .cur-row textarea:focus { border-color: var(--primary); }
+@media (max-width: 720px) {
+  .cur-grid-4 { grid-template-columns: 1fr 1fr; }
+  .cur-grid-3 { grid-template-columns: 1fr; }
+}
 
 /* ---------- Login ---------- */
 .login-wrap {

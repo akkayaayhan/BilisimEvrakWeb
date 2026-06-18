@@ -37,6 +37,7 @@ let db = {
   categories: [],
   subcategories: [],
   terms: [],
+  curricula: [],
   documents: []
 };
 
@@ -76,6 +77,7 @@ function load() {
       db.categories = db.categories || [];
       db.subcategories = db.subcategories || [];
       db.terms = db.terms || [];
+      db.curricula = db.curricula || [];
       db.documents = db.documents || [];
     } catch (err) {
       console.error('[db] db.json okunamadi, bos veritabani ile baslaniyor:', err.message);
@@ -118,6 +120,30 @@ function seed(hashPassword) {
     }));
     changed = true;
     console.log('[db] Varsayilan ogretim donemleri olusturuldu.');
+  }
+
+  if (db.curricula.length === 0) {
+    db.curricula.push({
+      id: newId(),
+      name: 'ÖRNEK - 10. Sınıf Bilişim Teknolojileri ve Yazılım',
+      gradeLevel: '10. Sınıf',
+      weeklyHours: 2,
+      rows: [
+        {
+          month: 'Eylül', week: '1', unit: 'İletişim, Bilişim ve İnternet',
+          topic: 'Bilişim teknolojileri kavramları', objectives: 'Bilişim teknolojileri kavramlarını açıklar.',
+          methods: 'Anlatım, Soru-Cevap', tools: 'Bilgisayar, Projeksiyon', assessment: 'Gözlem'
+        },
+        {
+          month: 'Eylül', week: '2', unit: 'İletişim, Bilişim ve İnternet',
+          topic: 'İnternet ve güvenli kullanım', objectives: 'İnterneti güvenli ve bilinçli kullanır.',
+          methods: 'Anlatım, Uygulama', tools: 'Bilgisayar', assessment: 'Uygulama'
+        }
+      ],
+      createdAt: new Date().toISOString()
+    });
+    changed = true;
+    console.log('[db] Ornek mufredat (plan sablonu) olusturuldu.');
   }
 
   if (db.users.length === 0) {
@@ -270,6 +296,37 @@ const terms = {
   }
 };
 
+// ---------------------- Mufredat / Plan Sablonlari ----------------------
+const curricula = {
+  all: () => db.curricula.slice().sort((a, b) => a.name.localeCompare(b.name, 'tr')),
+  findById: (id) => db.curricula.find((c) => c.id === id),
+  create: ({ name, gradeLevel, weeklyHours }) => {
+    const cur = {
+      id: newId(),
+      name: name.trim(),
+      gradeLevel: (gradeLevel || '').trim(),
+      weeklyHours: parseInt(weeklyHours, 10) || 0,
+      rows: [],
+      createdAt: new Date().toISOString()
+    };
+    db.curricula.push(cur);
+    save();
+    return cur;
+  },
+  update: (id, patch) => {
+    const cur = db.curricula.find((c) => c.id === id);
+    if (!cur) return null;
+    Object.assign(cur, patch);
+    save();
+    return cur;
+  },
+  remove: (id) => {
+    const before = db.curricula.length;
+    db.curricula = db.curricula.filter((c) => c.id !== id);
+    if (db.curricula.length !== before) save();
+  }
+};
+
 // ---------------------- Evraklar (Dokumanlar) ----------------------
 const documents = {
   all: () => db.documents.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
@@ -341,5 +398,6 @@ module.exports = {
   categories,
   subcategories,
   terms,
+  curricula,
   documents
 };

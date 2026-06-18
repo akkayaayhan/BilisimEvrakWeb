@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
@@ -11,6 +12,7 @@ const FileStore = require('session-file-store')(session);
 const db = require('./src/db');
 const { hashPassword, verifyPassword, requireAuth, requireAdmin } = require('./src/auth');
 const { upload, UPLOAD_DIR } = require('./src/upload');
+const { generatePlanBuffer } = require('./src/plangen');
 
 // -------------------- Baslangic --------------------
 db.load();
@@ -672,6 +674,132 @@ app.get('/yonetim/yedek/db.json', requireAuth, requireAdmin, (req, res) => {
   }
   const today = new Date().toISOString().slice(0, 10);
   res.download(db.DB_FILE, `evrak-yedek-${today}.json`);
+});
+
+// ==================== YILLIK PLAN OLUSTURUCU ====================
+app.get('/plan-olustur', requireAuth, requireAdmin, (req, res) => {
+  res.render('plan/create', { title: 'Yillik Plan Olustur', curricula: db.curricula.all(), terms: db.terms.all() });
+});
+
+app.post('/plan-olustur', requireAuth, requireAdmin, async (req, res) => {
+  const { curriculumId, schoolName, teacherName, term, className, principalName, saveArchive } = req.body;
+  const cur = db.curricula.findById(curriculumId);
+  if (!cur) {
+    setFlash(req, 'error', 'Lutfen bir mufredat (ders) secin.');
+    return res.redirect('/plan-olustur');
+  }
+  if (!cur.rows || cur.rows.length === 0) {
+    setFlash(req, 'error', 'Bu mufredatta henuz konu/kazanim satiri yok. Once Yonetim > Mufredat\'tan ekleyin.');
+    return res.redirect('/plan-olustur');
+  }
+  try {
+    const buf = await generatePlanBuffer({ curriculum: cur, schoolName, teacherName, term, className, principalName });
+    const safe = (s) => String(s || '').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40);
+    const niceName = `Yillik_Plan_${safe(cur.gradeLevel || cur.name)}_${safe(term)}.docx`;
+    const storedName = crypto.randomUUID() + '.docx';
+    const filePath = path.join(UPLOAD_DIR, storedName);
+    fs.writeFileSync(filePath, buf);
+
+    if (saveArchive) {
+      const category =
+        db.categories.all().find((c) => c.slug === 'yillik-planlar') || db.categories.all()[0];
+      if (category) {
+        const t = db.terms.findByName(term);
+        db.documents.create({
+          title: (cur.name || 'Yillik Plan') + (className ? ' - ' + className : '') + (term ? ' (' + term + ')' : ''),
+          description: 'Sistemden otomatik olusturulan yillik plan.',
+          categoryId: category.id,
+          termId: t ? t.id : null,
+          storedName,
+          originalName: niceName,
+          size: buf.length,
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          uploadedBy: req.session.user.id,
+          uploadedByName: req.session.user.fullName || req.session.user.username
+        });
+      }
+      return res.download(filePath, niceName);
+    }
+    // Arsive kaydetme -> indir, sonra gecici dosyayi sil
+    return res.download(filePath, niceName, () => fs.unlink(filePath, () => {}));
+  } catch (e) {
+    console.error('[plan] uretim hatasi', e);
+    setFlash(req, 'error', 'Plan olusturulamadi: ' + e.message);
+    return res.redirect('/plan-olustur');
+  }
+});
+
+// ---------- Mufredat (plan sablonu) yonetimi ----------
+app.get('/yonetim/mufredat', requireAuth, requireAdmin, (req, res) => {
+  res.render('admin/curricula', { title: 'Mufredat Yonetimi', curricula: db.curricula.all() });
+});
+
+app.post('/yonetim/mufredat', requireAuth, requireAdmin, (req, res) => {
+  const { name, gradeLevel, weeklyHours } = req.body;
+  if (!name || !name.trim()) {
+    setFlash(req, 'error', 'Mufredat adi gerekli.');
+    return res.redirect('/yonetim/mufredat');
+  }
+  const cur = db.curricula.create({ name, gradeLevel, weeklyHours });
+  setFlash(req, 'success', 'Mufredat olusturuldu. Simdi konu/kazanim satirlarini ekleyin.');
+  res.redirect('/yonetim/mufredat/' + cur.id);
+});
+
+app.get('/yonetim/mufredat/:id', requireAuth, requireAdmin, (req, res) => {
+  const cur = db.curricula.findById(req.params.id);
+  if (!cur) return res.status(404).render('error', { title: 'Bulunamadi', message: 'Mufredat bulunamadi.' });
+  res.render('admin/curriculum-edit', { title: 'Mufredat Duzenle', cur });
+});
+
+app.post('/yonetim/mufredat/:id', requireAuth, requireAdmin, (req, res) => {
+  const cur = db.curricula.findById(req.params.id);
+  if (!cur) {
+    setFlash(req, 'error', 'Mufredat bulunamadi.');
+    return res.redirect('/yonetim/mufredat');
+  }
+  const { name, gradeLevel, weeklyHours } = req.body;
+  db.curricula.update(cur.id, {
+    name: (name || cur.name).trim(),
+    gradeLevel: (gradeLevel || '').trim(),
+    weeklyHours: parseInt(weeklyHours, 10) || 0
+  });
+  setFlash(req, 'success', 'Mufredat bilgileri kaydedildi.');
+  res.redirect('/yonetim/mufredat/' + cur.id);
+});
+
+app.post('/yonetim/mufredat/:id/satirlar', requireAuth, requireAdmin, (req, res) => {
+  const cur = db.curricula.findById(req.params.id);
+  if (!cur) {
+    setFlash(req, 'error', 'Mufredat bulunamadi.');
+    return res.redirect('/yonetim/mufredat');
+  }
+  const arr = (x) => (x == null ? [] : Array.isArray(x) ? x : [x]);
+  const month = arr(req.body.month), week = arr(req.body.week), unit = arr(req.body.unit),
+    topic = arr(req.body.topic), objectives = arr(req.body.objectives), methods = arr(req.body.methods),
+    tools = arr(req.body.tools), assessment = arr(req.body.assessment);
+  const rows = [];
+  for (let i = 0; i < month.length; i++) {
+    const r = {
+      month: (month[i] || '').trim(), week: (week[i] || '').trim(), unit: (unit[i] || '').trim(),
+      topic: (topic[i] || '').trim(), objectives: (objectives[i] || '').trim(),
+      methods: (methods[i] || '').trim(), tools: (tools[i] || '').trim(), assessment: (assessment[i] || '').trim()
+    };
+    if (Object.values(r).some((v) => v)) rows.push(r);
+  }
+  db.curricula.update(cur.id, { rows });
+  setFlash(req, 'success', rows.length + ' satir kaydedildi.');
+  res.redirect('/yonetim/mufredat/' + cur.id);
+});
+
+app.post('/yonetim/mufredat/:id/sil', requireAuth, requireAdmin, (req, res) => {
+  const cur = db.curricula.findById(req.params.id);
+  if (!cur) {
+    setFlash(req, 'error', 'Mufredat bulunamadi.');
+    return res.redirect('/yonetim/mufredat');
+  }
+  db.curricula.remove(cur.id);
+  setFlash(req, 'success', 'Mufredat silindi.');
+  res.redirect('/yonetim/mufredat');
 });
 
 // ---------- Kullanici yonetimi ----------

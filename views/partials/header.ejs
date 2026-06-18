@@ -27,6 +27,10 @@
         <% }); %>
 
         <% if (currentUser.role === 'admin') { %>
+          <div class="nav-section">Araçlar</div>
+          <a href="/plan-olustur" class="nav-item <%= currentPath === '/plan-olustur' ? 'active' : '' %>"><span class="nav-ico">📝</span><span class="nav-label">Yıllık Plan Oluştur</span></a>
+          <a href="/yonetim/mufredat" class="nav-item <%= currentPath.indexOf('/yonetim/mufredat') === 0 ? 'active' : '' %>"><span class="nav-ico">📚</span><span class="nav-label">Müfredat</span></a>
+
           <div class="nav-section">Yönetim</div>
           <a href="/yukle" class="nav-item <%= currentPath === '/yukle' ? 'active' : '' %>"><span class="nav-ico">⬆️</span><span class="nav-label">Evrak Yükle</span></a>
           <a href="/yonetim/kategoriler" class="nav-item <%= currentPath === '/yonetim/kategoriler' ? 'active' : '' %>"><span class="nav-ico">🗃️</span><span class="nav-label">Kategoriler</span></a>
