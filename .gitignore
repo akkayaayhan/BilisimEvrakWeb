@@ -27,3 +27,8 @@ Thumbs.db
 .claude/
 .vscode/
 .idea/
+
+# Gecici plan calisma dosyalari
+_plans/
+_*.js
+_*.docx

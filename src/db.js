@@ -46,6 +46,7 @@ const DEFAULT_TERMS = ['2025-2026', '2026-2027'];
 
 // Hazir mufredat (yillik plan icerigi)
 const MOBIL_CURRICULUM = require('./seed-mobil');
+const SEED_COURSES = require('./seed-courses');
 
 /** "Yillik Planlar" -> "yillik-planlar" */
 function slugify(text) {
@@ -149,6 +150,15 @@ function seed(hashPassword) {
     changed = true;
     console.log('[db] Mobil Uygulamalar mufredati yuklendi.');
   }
+
+  // Diger hazir ders mufredatlari (eksik olanlari ekle)
+  SEED_COURSES.forEach((course) => {
+    if (!db.curricula.some((c) => c.name === course.name)) {
+      db.curricula.push(Object.assign({ id: newId(), createdAt: new Date().toISOString() }, course));
+      changed = true;
+      console.log('[db] Mufredat yuklendi: ' + course.name);
+    }
+  });
 
   if (db.users.length === 0) {
     const username = process.env.ADMIN_USERNAME || 'admin';
