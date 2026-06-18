@@ -13,6 +13,7 @@ const db = require('./src/db');
 const { hashPassword, verifyPassword, requireAuth, requireAdmin } = require('./src/auth');
 const { upload, UPLOAD_DIR } = require('./src/upload');
 const { generatePlanBuffer } = require('./src/plangen');
+const { CALENDARS, adaptRows } = require('./src/calendar');
 
 // -------------------- Baslangic --------------------
 db.load();
@@ -693,13 +694,16 @@ app.post('/plan-olustur', requireAuth, requireAdmin, async (req, res) => {
     return res.redirect('/plan-olustur');
   }
   try {
+    // Hedef yilin takvimi tanimliysa hafta tarihlerini/tatilleri otomatik uyarla
+    const cal = CALENDARS[term];
+    const planRows = cal ? adaptRows(cur.rows, cal) : cur.rows;
     const buf = await generatePlanBuffer({
       term, province, district, school,
       area: cur.area,
       gradeLevel: cur.gradeLevel,
       courseName: cur.courseName || cur.name,
       weeklyHours: cur.weeklyHours,
-      rows: cur.rows,
+      rows: planRows,
       defaultMethods: cur.defaultMethods,
       defaultTools: cur.defaultTools,
       signTeachers: cur.signTeachers,
